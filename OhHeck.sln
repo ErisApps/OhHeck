@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OhHeck.Core", "OhHeck.Core\OhHeck.Core.csproj", "{B10034B3-CC98-4513-AA3E-90A91CE71766}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OhHeck.CLI", "OhHeck.CLI\OhHeck.CLI.csproj", "{F056E624-9C0A-49AA-82F1-C67C703168F9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B10034B3-CC98-4513-AA3E-90A91CE71766}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B10034B3-CC98-4513-AA3E-90A91CE71766}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B10034B3-CC98-4513-AA3E-90A91CE71766}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B10034B3-CC98-4513-AA3E-90A91CE71766}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F056E624-9C0A-49AA-82F1-C67C703168F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F056E624-9C0A-49AA-82F1-C67C703168F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F056E624-9C0A-49AA-82F1-C67C703168F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F056E624-9C0A-49AA-82F1-C67C703168F9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
