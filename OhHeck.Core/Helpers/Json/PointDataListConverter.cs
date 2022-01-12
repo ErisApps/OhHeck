@@ -4,10 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using OhHeck.Core.Beatmap;
-using OhHeck.Core.Beatmap.ModCustomData;
+using OhHeck.Core.Models;
+using OhHeck.Core.Models.Beatmap;
 
-namespace OhHeck.Core.Json;
+namespace OhHeck.Core.Helpers.Json;
 
 public class PointDataListConverter : JsonConverter<List<PointData>>
 {

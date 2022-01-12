@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using OhHeck.Core.Json;
+using OhHeck.Core.Helpers.Json;
 
-namespace OhHeck.Core.Beatmap.ModCustomData;
+namespace OhHeck.Core.Models.Beatmap;
 
 #region Chroma
 [JsonConverter(typeof(JsonStringEnumConverter))]

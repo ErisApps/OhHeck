@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using OhHeck.Core.Json;
+using OhHeck.Core.Helpers.Json;
 
-namespace OhHeck.Core.Structs;
+namespace OhHeck.Core.Models.Structs;
 
 [JsonConverter(typeof(Vector2Converter))]
 public struct Vector2

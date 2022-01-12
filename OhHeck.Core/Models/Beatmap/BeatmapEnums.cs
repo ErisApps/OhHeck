@@ -1,4 +1,4 @@
-﻿namespace OhHeck.Core.Beatmap;
+﻿namespace OhHeck.Core.Models.Beatmap;
 
 
 public enum BeatmapObjectType

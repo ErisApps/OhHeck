@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using OhHeck.Core.Beatmap.ModCustomData;
-using OhHeck.Core.Structs;
+using OhHeck.Core.Models.Structs;
 
-namespace OhHeck.Core.Beatmap;
+namespace OhHeck.Core.Models.Beatmap;
 
 public class BeatmapCustomEvent
 {

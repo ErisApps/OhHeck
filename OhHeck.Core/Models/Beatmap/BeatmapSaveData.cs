@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace OhHeck.Core.Beatmap;
+namespace OhHeck.Core.Models.Beatmap;
 
 public class BeatmapSaveData
 {

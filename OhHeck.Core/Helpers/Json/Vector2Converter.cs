@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using OhHeck.Core.Structs;
+using OhHeck.Core.Models.Structs;
 
-namespace OhHeck.Core.Json;
+namespace OhHeck.Core.Helpers.Json;
 
-public class Vector3Converter : JsonConverter<Vector3>
+public class Vector2Converter : JsonConverter<Vector2>
 {
-	public override Vector3 Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+	public override Vector2 Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
 		if (reader.TokenType != JsonTokenType.StartArray)
 		{
 			throw new InvalidOperationException($"Expected {JsonTokenType.StartArray}, got {reader.TokenType}. Mappers, what");
 		}
 
-		var values = new float[3];
+		var values = new float[2];
 		var count = 0;
 
 		while (reader.Read())
@@ -24,7 +24,7 @@ public class Vector3Converter : JsonConverter<Vector3>
 				break;
 			}
 
-			if (count >= 3)
+			if (count >= 2)
 			{
 				continue;
 			}
@@ -33,15 +33,14 @@ public class Vector3Converter : JsonConverter<Vector3>
 			count++;
 		}
 
-		return new Vector3(values[0], values[1], values[2]);
+		return new Vector2(values[0], values[1]);
 	}
 
-	public override void Write(Utf8JsonWriter writer, Vector3 value, JsonSerializerOptions options)
+	public override void Write(Utf8JsonWriter writer, Vector2 value, JsonSerializerOptions options)
 	{
 		writer.WriteStartArray();
 		writer.WriteNumberValue(value.x);
 		writer.WriteNumberValue(value.y);
-		writer.WriteNumberValue(value.z);
 		writer.WriteEndArray();
 	}
 }

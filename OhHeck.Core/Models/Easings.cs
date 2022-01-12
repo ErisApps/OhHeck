@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace OhHeck.Core.Beatmap;
+namespace OhHeck.Core.Models;
 
 /// <summary>
 /// Easing Functions enumeration
@@ -61,42 +61,41 @@ public static class Easings
 	/// <summary>
 	/// Interpolate using the specified function.
 	/// </summary>
-	public static float Interpolate(float p, Functions function) =>
-		function switch
-		{
-			Functions.easeStep => EaseStep(p),
-			Functions.easeOutQuad => EaseOutQuad(p),
-			Functions.easeInQuad => EaseInQuad(p),
-			Functions.easeInOutQuad => EaseInOutQuad(p),
-			Functions.easeInCubic => EaseInCubic(p),
-			Functions.easeOutCubic => EaseOutCubic(p),
-			Functions.easeInOutCubic => EaseInOutCubic(p),
-			Functions.easeInQuart => EaseInQuart(p),
-			Functions.easeOutQuart => EaseOutQuart(p),
-			Functions.easeInOutQuart => EaseInOutQuart(p),
-			Functions.easeInQuint => EaseInQuint(p),
-			Functions.easeOutQuint => EaseOutQuint(p),
-			Functions.easeInOutQuint => EaseInOutQuint(p),
-			Functions.easeInSine => EaseInSine(p),
-			Functions.easeOutSine => EaseOutSine(p),
-			Functions.easeInOutSine => EaseInOutSine(p),
-			Functions.easeInCirc => EaseInCirc(p),
-			Functions.easeOutCirc => EaseOutCirc(p),
-			Functions.easeInOutCirc => EaseInOutCirc(p),
-			Functions.easeInExpo => EaseInExpo(p),
-			Functions.easeOutExpo => EaseOutExpo(p),
-			Functions.easeInOutExpo => EaseInOutExpo(p),
-			Functions.easeInElastic => EaseInElastic(p),
-			Functions.easeOutElastic => EaseOutElastic(p),
-			Functions.easeInOutElastic => EaseInOutElastic(p),
-			Functions.easeInBack => EaseInBack(p),
-			Functions.easeOutBack => EaseOutBack(p),
-			Functions.easeInOutBack => EaseInOutBack(p),
-			Functions.easeInBounce => EaseInBounce(p),
-			Functions.easeOutBounce => EaseOutBounce(p),
-			Functions.easeInOutBounce => EaseInOutBounce(p),
-			_ => EaseLinear(p)
-		};
+	public static float Interpolate(float p, Functions function) => function switch
+	{
+		Functions.easeStep => EaseStep(p),
+		Functions.easeOutQuad => EaseOutQuad(p),
+		Functions.easeInQuad => EaseInQuad(p),
+		Functions.easeInOutQuad => EaseInOutQuad(p),
+		Functions.easeInCubic => EaseInCubic(p),
+		Functions.easeOutCubic => EaseOutCubic(p),
+		Functions.easeInOutCubic => EaseInOutCubic(p),
+		Functions.easeInQuart => EaseInQuart(p),
+		Functions.easeOutQuart => EaseOutQuart(p),
+		Functions.easeInOutQuart => EaseInOutQuart(p),
+		Functions.easeInQuint => EaseInQuint(p),
+		Functions.easeOutQuint => EaseOutQuint(p),
+		Functions.easeInOutQuint => EaseInOutQuint(p),
+		Functions.easeInSine => EaseInSine(p),
+		Functions.easeOutSine => EaseOutSine(p),
+		Functions.easeInOutSine => EaseInOutSine(p),
+		Functions.easeInCirc => EaseInCirc(p),
+		Functions.easeOutCirc => EaseOutCirc(p),
+		Functions.easeInOutCirc => EaseInOutCirc(p),
+		Functions.easeInExpo => EaseInExpo(p),
+		Functions.easeOutExpo => EaseOutExpo(p),
+		Functions.easeInOutExpo => EaseInOutExpo(p),
+		Functions.easeInElastic => EaseInElastic(p),
+		Functions.easeOutElastic => EaseOutElastic(p),
+		Functions.easeInOutElastic => EaseInOutElastic(p),
+		Functions.easeInBack => EaseInBack(p),
+		Functions.easeOutBack => EaseOutBack(p),
+		Functions.easeInOutBack => EaseInOutBack(p),
+		Functions.easeInBounce => EaseInBounce(p),
+		Functions.easeOutBounce => EaseOutBounce(p),
+		Functions.easeInOutBounce => EaseInOutBounce(p),
+		_ => EaseLinear(p)
+	};
 
 	/// <summary>
 	/// Modeled after the line y = x

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using OhHeck.Core.Beatmap;
+using OhHeck.Core.Models.Beatmap;
 
 Console.WriteLine("Hello, World!");
 
