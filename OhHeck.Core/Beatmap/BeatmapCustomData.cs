@@ -49,8 +49,9 @@ public class BeatmapCustomData
 public class ObjectCustomData
 {
 	// Unsure if the array works like PointData or always float[]
+	// Can also be a string which points to a Point Def defined in beatmap customData
 	[JsonPropertyName("_animation")]
-	public Dictionary<string, object[]>? animation;
+	public Dictionary<string, object>? animation;
 
 	[JsonPropertyName("_position")]
 	public Vector2? Position;
