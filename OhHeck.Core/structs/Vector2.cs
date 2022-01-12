@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Text.Json.Serialization;
+using OhHeck.Core.json;
 
 namespace OhHeck.Core.structs;
 
+[JsonConverter(typeof(Vector2Converter))]
 public struct Vector2
 {
 	public float x;

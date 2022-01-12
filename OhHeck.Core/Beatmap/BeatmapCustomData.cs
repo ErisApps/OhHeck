@@ -1,54 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using OhHeck.Core.Beatmap;
+using OhHeck.Core.Beatmap.ModCustomData;
 using OhHeck.Core.structs;
 
-namespace OhHeck.Core;
-
-public enum LookupMethod
-{
-	Regex,
-	Exact,
-	Contains
-}
-
-public class EnvironmentEnhancement
-{
-	// {
-	// 	"_id": "^.*\\[\\d*[13579]\\]BigTrackLaneRing\\(Clone\\)$",
-	// 	"_lookupMethod": "Regex",
-	// 	"_scale": [0.1, 0.1, 0.1]
-	// }
-
-	public EnvironmentEnhancement(LookupMethod lookupMethod, string id)
-	{
-		LookupMethod = lookupMethod;
-		Id = id;
-	}
-
-	[JsonPropertyName("_id")]
-	public string Id { get; }
-
-
-	[JsonPropertyName("_lookupMethod")]
-	public LookupMethod LookupMethod;
-
-	[JsonExtensionData]
-	public Dictionary<string, object> DontCareAboutThisData { get; } = new();
-}
+namespace OhHeck.Core.Beatmap;
 
 public class BeatmapCustomEvent
 {
 	[JsonPropertyName("_time")]
-	public float Time;
+	public float Time { get; }
 
 	[JsonPropertyName("_type")]
-	public string Type;
+	public string Type { get; }
 
 	[JsonPropertyName("_data")]
-	public Dictionary<string, object> Data = new();
+	public Dictionary<string, object> Data { get; }
 
 	public BeatmapCustomEvent(float time, string type, Dictionary<string, object> data)
 	{
@@ -58,113 +24,59 @@ public class BeatmapCustomEvent
 	}
 }
 
-public class PointData
-{
-	public float[] Data { get; }
-
-	public float Time { get; }
-
-	// if null, it SHOULD mean the first point
-	public Functions? Easing { get; }
-
-	public bool Smooth { get; } = false;
-
-	public PointData(List<object> data)
-	{
-		List<float> preData = new();
-
-		foreach (var o in data)
-		{
-			switch (o)
-			{
-				case int:
-				case float:
-					preData.Add((float) o);
-					break;
-				case string str:
-				{
-					if (str == "splineCatmullRom")
-					{
-						Smooth = true;
-					}
-					else
-					{
-						Easing = Enum.Parse(typeof(Functions), str) as Functions?;
-					}
-					break;
-				}
-			}
-		}
-
-		Time = preData.Last();
-		Data = preData.GetRange(0, preData.Count - 1).ToArray();
-	}
-}
-
-public class PointDefinitionData
-{
-	public PointDefinitionData(string name, List<object> points)
-	{
-		Name = name;
-		Points = points;
-	}
-
-	[JsonPropertyName("_name")]
-	public string Name { get; }
-
-	// We might need a custom parser for this to make this actually not stupid
-	// We also need to parse [...] -> PointData
-	// Most of the time it will be [[...], [...]] -> List<PointData> though
-	[JsonPropertyName("_points")]
-	public List<object> Points { get; } = new();
-}
-
 public class BeatmapCustomData
 {
 	[JsonPropertyName("_environment")]
-	public List<EnvironmentEnhancement> EnvironmentEnhancements = new();
+	public List<EnvironmentEnhancement>? EnvironmentEnhancements { get; }
 
 	[JsonPropertyName("_customEvents")]
-	public List<BeatmapCustomEvent> CustomEvents { get; } = new();
+	public List<BeatmapCustomEvent>? CustomEvents { get; }
 
 	[JsonPropertyName("_pointDefinitions")]
-	public List<PointDefinitionData> PointDefinitions { get; } = new();
+	public List<PointDefinitionData>? PointDefinitions { get; }
 
 	[JsonExtensionData]
-	public Dictionary<string, object> DontCareAboutThisData { get; } = new();
+	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
+
+	public BeatmapCustomData(List<EnvironmentEnhancement>? environmentEnhancements, List<BeatmapCustomEvent>? customEvents, List<PointDefinitionData>? pointDefinitions)
+	{
+		EnvironmentEnhancements = environmentEnhancements;
+		CustomEvents = customEvents;
+		PointDefinitions = pointDefinitions;
+	}
 }
 
 public class ObjectCustomData
 {
 	// Unsure if the array works like PointData or always float[]
 	[JsonPropertyName("_animation")]
-	public Dictionary<string, object[]> animation = new();
+	public Dictionary<string, object[]>? animation;
 
 	[JsonPropertyName("_position")]
-	public Vector2 Position;
+	public Vector2? Position;
 
 	[JsonPropertyName("_rotation")]
-	public Vector3 Rotation;
+	public Vector3? Rotation;
 
 	[JsonPropertyName("_localRotation")]
-	public Vector3 LocalRotation;
+	public Vector3? LocalRotation;
 
 	[JsonPropertyName("_noteJumpMovementSpeed")]
-	public float NoteJumpMovementSpeed;
+	public float? NoteJumpMovementSpeed;
 
 	[JsonPropertyName("_noteJumpStartBeatOffset")]
-	public float NoteJumpStartBeatOffset;
+	public float? NoteJumpStartBeatOffset;
 
 	// mappers worst enemy
 	[JsonPropertyName("_fake")]
-	public bool Fake;
+	public FakeTruthy? Fake;
 
 	[JsonPropertyName("_interactable")]
-	public bool Cuttable;
+	public FakeTruthy? Cuttable;
 
 
 	[JsonExtensionData]
-	public Dictionary<string, object> DontCareAboutThisData { get; } = new();
+	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
 }
 
 public class ObstacleCustomData : ObjectCustomData
@@ -180,5 +92,5 @@ public class NoteCustomData : ObjectCustomData
 public class EventCustomData
 {
 	[JsonExtensionData]
-	public Dictionary<string, object> DontCareAboutThisData { get; } = new();
+	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
 }

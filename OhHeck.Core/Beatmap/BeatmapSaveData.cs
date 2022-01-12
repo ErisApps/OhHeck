@@ -9,28 +9,27 @@ public class BeatmapSaveData
 	public string? Version { get; }
 
 	[JsonPropertyName("_events")]
-	public List<EventData> Events { get; } = new();
+	public List<EventData> Events { get; }
 
 	[JsonPropertyName("_obstacles")]
-	public List<ObstacleData> Obstacles { get; } = new();
+	public List<ObstacleData> Obstacles { get; }
 
 	[JsonPropertyName("_notes")]
-	public List<ObstacleData> Notes { get; } = new();
+	public List<ObstacleData> Notes { get; }
 
 	[JsonPropertyName("_customData")]
-	public BeatmapCustomData BeatmapCustomData { get; set; }
+	public BeatmapCustomData? BeatmapCustomData { get; }
 
 	[JsonExtensionData]
-	public Dictionary<string, object> DontCareAboutThisData { get; } = new();
+	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
 
-	public BeatmapSaveData(BeatmapCustomData beatmapCustomData, string? version, List<EventData> events, List<ObstacleData> obstacles, List<ObstacleData> notes, Dictionary<string, object> dontCareAboutThisData)
+	public BeatmapSaveData(string? version, List<EventData> events, List<ObstacleData> obstacles, List<ObstacleData> notes, BeatmapCustomData? beatmapCustomData)
 	{
-		BeatmapCustomData = beatmapCustomData;
 		Version = version;
 		Events = events;
 		Obstacles = obstacles;
 		Notes = notes;
-		DontCareAboutThisData = dontCareAboutThisData;
+		BeatmapCustomData = beatmapCustomData;
 	}
 }
 
@@ -49,7 +48,7 @@ public class EventData
 	public float FloatValue { get; set; }
 
 	[JsonPropertyName("_customData")]
-	public EventCustomData EventCustomData { get; set; }
+	public EventCustomData? EventCustomData { get; set; }
 
 
 	public EventData(float time, BeatmapEventType type, int value, float floatValue, EventCustomData eventCustomData)
@@ -80,7 +79,7 @@ public class NoteData
 	public NoteCutDirection CutDirection { get; }
 
 	[JsonPropertyName("_customData")]
-	public NoteCustomData NoteCustomData { get; set; }
+	public NoteCustomData? NoteCustomData { get; set; }
 
 	public NoteData(float time, int lineIndex, int lineLayer, NoteType type, NoteCutDirection cutDirection, NoteCustomData noteCustomData)
 	{
@@ -111,7 +110,7 @@ public class ObstacleData
 	public int Width { get; }
 
 	[JsonPropertyName("_customData")]
-	public ObstacleCustomData ObstacleCustomData { get; set; }
+	public ObstacleCustomData? ObstacleCustomData { get; set; }
 
 	public ObstacleData(float time, int lineIndex, ObstacleType type, float duration, int width, ObstacleCustomData obstacleCustomData)
 	{
