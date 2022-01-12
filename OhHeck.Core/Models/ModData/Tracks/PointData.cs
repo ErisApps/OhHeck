@@ -45,6 +45,7 @@ public class PointData
 					{
 						Easing = Enum.Parse(typeof(Functions), str) as Functions?;
 					}
+
 					break;
 				}
 			}

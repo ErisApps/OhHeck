@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using OhHeck.Core.Helpers.Json;
+using OhHeck.Core.Helpers.Converters;
 
 namespace OhHeck.Core.Models.Structs;
 

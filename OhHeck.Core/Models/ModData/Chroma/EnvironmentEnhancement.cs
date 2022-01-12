@@ -22,6 +22,7 @@ public class EnvironmentEnhancement
 
 
 	[JsonPropertyName("_lookupMethod")]
+	[JsonConverter(typeof(JsonStringEnumConverter))]
 	public LookupMethod LookupMethod { get; }
 
 	[JsonExtensionData]
