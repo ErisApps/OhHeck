@@ -3,9 +3,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using OhHeck.Core.Analyzer;
 using OhHeck.Core.Models.Beatmap;
 
 Console.WriteLine("Hello, World!");
+
+WarningManager warningManager = new();
+warningManager.Init();
 
 void TestMap(string name)
 {
