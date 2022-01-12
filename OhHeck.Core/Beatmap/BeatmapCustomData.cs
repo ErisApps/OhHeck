@@ -7,6 +7,38 @@ using OhHeck.Core.structs;
 
 namespace OhHeck.Core;
 
+public enum LookupMethod
+{
+	Regex,
+	Exact,
+	Contains
+}
+
+public class EnvironmentEnhancement
+{
+	// {
+	// 	"_id": "^.*\\[\\d*[13579]\\]BigTrackLaneRing\\(Clone\\)$",
+	// 	"_lookupMethod": "Regex",
+	// 	"_scale": [0.1, 0.1, 0.1]
+	// }
+
+	public EnvironmentEnhancement(LookupMethod lookupMethod, string id)
+	{
+		LookupMethod = lookupMethod;
+		Id = id;
+	}
+
+	[JsonPropertyName("_id")]
+	public string Id { get; }
+
+
+	[JsonPropertyName("_lookupMethod")]
+	public LookupMethod LookupMethod;
+
+	[JsonExtensionData]
+	public Dictionary<string, object> DontCareAboutThisData { get; } = new();
+}
+
 public class BeatmapCustomEvent
 {
 	[JsonPropertyName("_time")]
@@ -89,12 +121,8 @@ public class PointDefinitionData
 
 public class BeatmapCustomData
 {
-	public BeatmapCustomData(List<BeatmapCustomEvent> customEvents, List<PointDefinitionData> pointDefinitions, Dictionary<string, object> dontCareAboutThisData)
-	{
-		CustomEvents = customEvents;
-		PointDefinitions = pointDefinitions;
-		DontCareAboutThisData = dontCareAboutThisData;
-	}
+	[JsonPropertyName("_environment")]
+	public List<EnvironmentEnhancement> EnvironmentEnhancements = new();
 
 	[JsonPropertyName("_customEvents")]
 	public List<BeatmapCustomEvent> CustomEvents { get; } = new();
