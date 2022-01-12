@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using OhHeck.Core.json;
+using OhHeck.Core.Json;
 
 namespace OhHeck.Core.Beatmap.ModCustomData;
 

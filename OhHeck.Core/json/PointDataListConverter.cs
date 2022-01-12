@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 using OhHeck.Core.Beatmap;
 using OhHeck.Core.Beatmap.ModCustomData;
 
-namespace OhHeck.Core.json;
+namespace OhHeck.Core.Json;
 
 public class PointDataListConverter : JsonConverter<List<PointData>>
 {

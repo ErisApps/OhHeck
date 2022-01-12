@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
-using OhHeck.Core.json;
+using OhHeck.Core.Json;
 
-namespace OhHeck.Core.structs;
+namespace OhHeck.Core.Structs;
 
 [JsonConverter(typeof(FakeTruthyConverter))]
 public enum FakeTruthy

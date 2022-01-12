@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using OhHeck.Core.structs;
+using OhHeck.Core.Structs;
 
-namespace OhHeck.Core.json;
+namespace OhHeck.Core.Json;
 
 public class FakeTruthyConverter : JsonConverter<FakeTruthy>
 {
