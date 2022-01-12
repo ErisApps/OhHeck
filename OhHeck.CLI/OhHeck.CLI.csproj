@@ -15,4 +15,13 @@
 		<ProjectReference Include="..\OhHeck.Core\OhHeck.Core.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="test_maps\SomewhereOutThereEPlus.dat">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="test_maps\CentipedeEPlus.dat">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>
