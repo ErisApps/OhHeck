@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Helpers.Converters;
 
@@ -18,27 +18,22 @@ public struct Vector3
 		this.z = z;
 	}
 
-	// Token: 0x06000FE8 RID: 4072 RVA: 0x00017EE6 File Offset: 0x000160E6
 	public Vector3(float x, float y)
 	{
 		this.x = x;
 		this.y = y;
-		this.z = 0f;
+		z = 0f;
 	}
 
 	public float this[int index]
 	{
-		get
+		get => index switch
 		{
-			var result = index switch
-			{
-				0 => this.x,
-				1 => this.y,
-				2 => this.z,
-				_ => throw new IndexOutOfRangeException("Invalid Vector3 index!")
-			};
-			return result;
-		}
+			0 => x,
+			1 => y,
+			2 => z,
+			_ => throw new IndexOutOfRangeException(nameof(index))
+		};
 		set
 		{
 			switch (index)
@@ -53,7 +48,7 @@ public struct Vector3
 					z = value;
 					break;
 				default:
-					throw new IndexOutOfRangeException("Invalid Vector3 index!");
+					throw new IndexOutOfRangeException(nameof(index));
 			}
 		}
 	}

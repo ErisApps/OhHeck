@@ -1,9 +1,11 @@
-﻿using System.Text.Json.Serialization;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 using OhHeck.Core.Helpers.Converters;
 
 namespace OhHeck.Core.Models.Structs;
 
 [JsonConverter(typeof(FakeTruthyConverter))]
+[SuppressMessage("Design", "CA1069:Enums values should not be duplicated", Justification = "STRING_TRUE and STRING_FALSE are marked equivalent")]
 public enum FakeTruthy
 {
 	TRUE = 1,

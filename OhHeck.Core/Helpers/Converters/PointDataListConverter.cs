@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,7 +21,9 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 		while (reader.Read())
 		{
 			if (reader.TokenType == JsonTokenType.EndArray)
+			{
 				break;
+			}
 
 			switch (reader.TokenType)
 			{
@@ -43,7 +45,7 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 					break;
 
 				default:
-					throw new InvalidOperationException($"Not a array or number. Received {reader.TokenType}");
+					throw new JsonException();
 			}
 		}
 
@@ -81,7 +83,7 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 
 		if (reader.TokenType != JsonTokenType.StartArray)
 		{
-			throw new InvalidDataException("Not an array");
+			throw new JsonException("Not an array");
 		}
 
 		// Parses an array of floats/strings and inner arrays of floats/strings
@@ -89,14 +91,14 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 		while (reader.Read())
 		{
 			if (reader.TokenType == JsonTokenType.EndArray)
+			{
 				break;
+			}
 
 			switch (reader.TokenType)
 			{
 				// point data is [[...], [...]]
 				case JsonTokenType.StartArray:
-					pointDatas.Add(ParsePointData(ref reader));
-					break;
 				// point data is [...]
 				case JsonTokenType.Number:
 				case JsonTokenType.String:
@@ -104,7 +106,7 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 					break;
 
 				default:
-					throw new InvalidOperationException($"Not a array or number. Received {reader.TokenType}");
+					throw new JsonException($"Not a array or number. Received {reader.TokenType}");
 			}
 		}
 

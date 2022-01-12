@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Models.Structs;
@@ -11,7 +11,7 @@ public class Vector2Converter : JsonConverter<Vector2>
 	{
 		if (reader.TokenType != JsonTokenType.StartArray)
 		{
-			throw new InvalidOperationException($"Expected {JsonTokenType.StartArray}, got {reader.TokenType}. Mappers, what");
+			throw new JsonException($"Expected {JsonTokenType.StartArray}, got {reader.TokenType}. Mappers, what");
 		}
 
 		var values = new float[2];

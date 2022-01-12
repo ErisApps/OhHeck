@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Helpers.Converters;
 
@@ -18,36 +18,24 @@ public struct Vector2
 
 	public float this[int index]
 	{
-		get
+		get => index switch
 		{
-			float result;
-			if (index != 0)
-			{
-				if (index != 1)
-				{
-					throw new IndexOutOfRangeException("Invalid Vector2 index!");
-				}
-				result = this.y;
-			}
-			else
-			{
-				result = this.x;
-			}
-			return result;
-		}
+			0 => x,
+			1 => y,
+			_ => throw new IndexOutOfRangeException(nameof(index))
+		};
 		set
 		{
-			if (index != 0)
+			switch (index)
 			{
-				if (index != 1)
-				{
-					throw new IndexOutOfRangeException("Invalid Vector2 index!");
-				}
-				this.y = value;
-			}
-			else
-			{
-				this.x = value;
+				case 0:
+					x = value;
+					break;
+				case 1:
+					y = value;
+					break;
+				default:
+					throw new IndexOutOfRangeException(nameof(index));
 			}
 		}
 	}

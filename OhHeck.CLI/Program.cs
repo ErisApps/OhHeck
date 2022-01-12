@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
@@ -7,7 +7,7 @@ using OhHeck.Core.Models.Beatmap;
 
 Console.WriteLine("Hello, World!");
 
-void TestMap(string name)
+static void TestMap(string name)
 {
 	Console.WriteLine($"Testing map {name}");
 	var fileStream = File.OpenRead($"./test_maps/{name}.dat");
