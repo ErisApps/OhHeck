@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Models;
 using OhHeck.Core.Models.Beatmap;
+using OhHeck.Core.Models.ModData.Tracks;
 
 namespace OhHeck.Core.Helpers.Json;
 

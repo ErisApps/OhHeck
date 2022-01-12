@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using OhHeck.Core.Models.ModData.Chroma;
+using OhHeck.Core.Models.ModData.Tracks;
 using OhHeck.Core.Models.Structs;
 
 namespace OhHeck.Core.Models.Beatmap;

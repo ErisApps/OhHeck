@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using OhHeck.Core.Models.Beatmap.Enums;
 
 namespace OhHeck.Core.Models.Beatmap;
 
@@ -49,7 +50,6 @@ public class EventData
 
 	[JsonPropertyName("_customData")]
 	public EventCustomData? EventCustomData { get; set; }
-
 
 	public EventData(float time, BeatmapEventType type, int value, float floatValue, EventCustomData eventCustomData)
 	{
