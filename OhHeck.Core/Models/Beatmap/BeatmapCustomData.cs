@@ -1,31 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using OhHeck.Core.Analyzer;
 using OhHeck.Core.Models.ModData.Chroma;
 using OhHeck.Core.Models.ModData.Tracks;
 using OhHeck.Core.Models.Structs;
 
 namespace OhHeck.Core.Models.Beatmap;
 
-public class BeatmapCustomEvent
-{
-	[JsonPropertyName("_time")]
-	public float Time { get; }
-
-	[JsonPropertyName("_type")]
-	public string Type { get; }
-
-	[JsonPropertyName("_data")]
-	public Dictionary<string, object> Data { get; }
-
-	public BeatmapCustomEvent(float time, string type, Dictionary<string, object> data)
-	{
-		Time = time;
-		Type = type;
-		Data = data;
-	}
-}
-
-public class BeatmapCustomData
+public class BeatmapCustomData : IAnalyzable
 {
 	[JsonPropertyName("_environment")]
 	public List<EnvironmentEnhancement>? EnvironmentEnhancements { get; }
@@ -45,7 +27,31 @@ public class BeatmapCustomData
 		CustomEvents = customEvents;
 		PointDefinitions = pointDefinitions;
 	}
+
+	public string GetFriendlyName() => "BeatmapCustomData";
 }
+
+public class BeatmapCustomEvent : IAnalyzable
+{
+	[JsonPropertyName("_time")]
+	public float Time { get; }
+
+	[JsonPropertyName("_type")]
+	public string Type { get; }
+
+	[JsonPropertyName("_data")]
+	public Dictionary<string, object> Data { get; }
+
+	public BeatmapCustomEvent(float time, string type, Dictionary<string, object> data)
+	{
+		Time = time;
+		Type = type;
+		Data = data;
+	}
+
+	public string GetFriendlyName() => "BeatmapCustomEvent";
+}
+
 
 public class ObjectCustomData
 {
@@ -81,18 +87,20 @@ public class ObjectCustomData
 	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
 }
 
-public class ObstacleCustomData : ObjectCustomData
+public class ObstacleCustomData : ObjectCustomData, IAnalyzable
 {
-
+	public string GetFriendlyName() => "ObstacleCustomData";
 }
 
-public class NoteCustomData : ObjectCustomData
+public class NoteCustomData : ObjectCustomData, IAnalyzable
 {
-
+	public string GetFriendlyName() => "NoteCustomData";
 }
 
-public class EventCustomData
+public class EventCustomData : IAnalyzable
 {
 	[JsonExtensionData]
 	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
+
+	public string GetFriendlyName() => "EventCustomData";
 }

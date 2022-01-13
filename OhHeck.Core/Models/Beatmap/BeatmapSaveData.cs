@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using OhHeck.Core.Analyzer;
 using OhHeck.Core.Models.Beatmap.Enums;
 
 namespace OhHeck.Core.Models.Beatmap;
 
-public class BeatmapSaveData
+public class BeatmapSaveData : IAnalyzable
 {
 	[JsonPropertyName("_version")]
 	public string? Version { get; }
@@ -32,9 +33,11 @@ public class BeatmapSaveData
 		Notes = notes;
 		BeatmapCustomData = beatmapCustomData;
 	}
+
+	public string GetFriendlyName() => "Beatmap";
 }
 
-public class EventData
+public class EventData : IAnalyzable
 {
 	[JsonPropertyName("_time")]
 	public float Time { get; }
@@ -59,9 +62,12 @@ public class EventData
 		FloatValue = floatValue;
 		EventCustomData = eventCustomData;
 	}
+
+	public string GetFriendlyName() => "EventData";
+	public string? ExtraData() => $"Time: {Time} Type {Type}";
 }
 
-public class NoteData
+public class NoteData : IAnalyzable
 {
 	[JsonPropertyName("_time")]
 	public float Time { get; }
@@ -90,9 +96,12 @@ public class NoteData
 		CutDirection = cutDirection;
 		NoteCustomData = noteCustomData;
 	}
+
+	public string GetFriendlyName() => "NoteData";
+	public string? ExtraData() => $"Time: {Time} Type {Type}";
 }
 
-public class ObstacleData
+public class ObstacleData : IAnalyzable
 {
 	[JsonPropertyName("_time")]
 	public float Time { get; }
@@ -121,4 +130,7 @@ public class ObstacleData
 		Width = width;
 		ObstacleCustomData = obstacleCustomData;
 	}
+
+	public string GetFriendlyName() => "ObstacleData";
+	public string? ExtraData() => $"Time: {Time} Type {Type}";
 }

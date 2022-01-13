@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using OhHeck.Core.Analyzer;
 
 namespace OhHeck.Core.Models.ModData.Tracks;
 
-public class PointData
+public class PointData : IAnalyzable
 {
 	public float[] Data { get; }
 
@@ -54,4 +55,6 @@ public class PointData
 		Time = preData.Last();
 		Data = preData.GetRange(0, preData.Count - 1).ToArray();
 	}
+
+	public string GetFriendlyName() => "SinglePointData";
 }
