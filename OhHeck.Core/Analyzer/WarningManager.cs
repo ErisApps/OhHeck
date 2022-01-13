@@ -70,21 +70,66 @@ public class WarningManager
 		}
 
 		var friendlyName = analyzable?.GetFriendlyName() ?? type.Name;
-		var fieldInfos = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
 
-		Dictionary<FieldInfo, object?> fieldValues = new();
+		var memberInfos = AnalyzeMemberInfo(analyzable, parent, type, friendlyName);
 
-		// Analyze each field
-		foreach (var fieldInfo in fieldInfos)
+		if (analyzable is null)
 		{
-			object? fieldValue = null;
-			if (analyzable is not null)
+			return;
+		}
+
+		// Now to recursively analyze
+		foreach (var (_, (memberValue, memberType)) in memberInfos)
+		{
+			if (!IAnalyzableType.IsAssignableFrom(memberType))
 			{
-				fieldValues[fieldInfo] = fieldValue = fieldInfo.GetValue(analyzable);
+				continue;
 			}
 
+			var fieldValue = (IAnalyzable?) memberValue;
+			Analyze(fieldValue, analyzable, memberType);
+		}
+	}
+
+	private Dictionary<MemberInfo, (object?, Type)> AnalyzeMemberInfo(IAnalyzable? analyzable, IAnalyzable? parent, IReflect type, string friendlyName)
+	{
+		var fieldInfos = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
+		var propInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+		var memberInfos = fieldInfos.ToList<MemberInfo>();
+		memberInfos.AddRange(propInfos.ToList<MemberInfo>());
+
+		Dictionary<MemberInfo, (object?, Type)> memberValues = new();
+
+
+		// Analyze each field
+		foreach (var memberInfo in memberInfos)
+		{
+			var analyzeMemberAttribute = memberInfo.GetCustomAttribute<AnalyzeMemberAttribute>();
+			var friendlyMemberName = analyzeMemberAttribute?.Name ?? memberInfo.Name;
+
+			object? memberValue = null;
+			var memberType = memberInfo switch
+			{
+				PropertyInfo propertyInfo => propertyInfo.PropertyType,
+				FieldInfo fieldInfo => fieldInfo.FieldType,
+				_ => null
+			};
+
+			if (analyzable is not null)
+			{
+				memberValue = memberInfo switch
+				{
+					PropertyInfo propertyInfo => propertyInfo.GetValue(analyzable),
+					FieldInfo fieldInfo => fieldInfo.GetValue(analyzable),
+					_ => memberValue
+				};
+			}
+
+			memberValues[memberInfo] = (memberValue, memberType!);
+
 			var warnings = _beatmapWarnings
-				.Select(warning => warning.Value.Validate(fieldInfo, fieldValue))
+				.Select(warning => warning.Value.Validate(memberType!, memberValue))
 				.Where(s => s is not null).ToList();
 
 			if (warnings.Count == 0)
@@ -94,7 +139,7 @@ public class WarningManager
 
 			foreach (var warning in warnings)
 			{
-				_logger.Warning($"Warning: {friendlyName}:{fieldInfo.Name} {warning}");
+				_logger.Warning($"Warning: {friendlyName}:{{{friendlyMemberName}}} {warning}");
 				if (parent is not null)
 				{
 					_logger.Warning($"Parent {parent.GetFriendlyName()} {parent.ExtraData()}");
@@ -105,23 +150,6 @@ public class WarningManager
 
 			break;
 		}
-
-		if (analyzable is null)
-		{
-			return;
-		}
-
-
-		// Now to recursively analyze
-		foreach (var fieldInfo in fieldInfos)
-		{
-			if (!IAnalyzableType.IsAssignableFrom(fieldInfo.FieldType))
-			{
-				continue;
-			}
-
-			var fieldValue = (IAnalyzable?) fieldValues[fieldInfo];
-			Analyze(fieldValue, analyzable, fieldInfo.FieldType);
-		}
+		return memberValues;
 	}
 }

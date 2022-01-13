@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using OhHeck.Core.Helpers.Enumerable;
 using OhHeck.Core.Models.ModData.Tracks;
 
@@ -10,7 +10,7 @@ namespace OhHeck.Core.Analyzer.SmellyJson;
 public class DuplicatePointData : IBeatmapWarning {
 
 	// TODO: Test
-	public string? Validate(FieldInfo fieldInfo, object? value)
+	public string? Validate(Type fieldType, object? value)
 	{
 		if (value is not List<PointData> { Count: > 1 } pointDatas)
 		{
@@ -25,8 +25,10 @@ public class DuplicatePointData : IBeatmapWarning {
 			// Both points are identical
 			if (prevPoint.Data.AreArrayElementsIdentical(point.Data))
 			{
-				return $"Point data are identical: Point1 {prevPoint.Data}:{prevPoint.Time} Point2: {point.Data}:{point.Time}";
+				return $"Point data are identical: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} Point2: {point.Data.ArrayToString()}:{point.Time}";
 			}
+
+			prevPoint = point;
 		}
 
 		return null;
