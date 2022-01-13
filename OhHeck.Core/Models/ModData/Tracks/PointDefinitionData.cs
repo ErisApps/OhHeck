@@ -23,5 +23,5 @@ public class PointDefinitionData : IAnalyzable
 	[JsonConverter(typeof(PointDataListConverter))]
 	public List<PointData> Points { get; }
 
-	public string GetFriendlyName() => "PointDefinition";
+	public string GetFriendlyName() => $"PointDefinition {Name}";
 }

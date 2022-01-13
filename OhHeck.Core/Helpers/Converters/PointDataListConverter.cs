@@ -11,7 +11,7 @@ namespace OhHeck.Core.Helpers.Converters;
 
 public class PointDataListConverter : JsonConverter<List<PointData>>
 {
-	private static PointData ParsePointData(ref Utf8JsonReader reader)
+	private static PointData ParsePointData(ref Utf8JsonReader reader, bool single)
 	{
 		var smooth = false;
 		Functions? easing = null;
@@ -49,8 +49,20 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 			}
 		}
 
-		var time = preData.Last();
-		var animationData = preData.GetRange(0, preData.Count - 1).ToArray();
+		float time;
+		float[] animationData;
+
+		if (!single)
+		{
+			// single point defs are 0 time
+			time = 0;
+			animationData = preData.ToArray();
+		}
+		else
+		{
+			time = preData.Last();
+			animationData = preData.GetRange(0, preData.Count - 1).ToArray();
+		}
 
 		return new PointData(time: time, data: animationData, smooth: smooth, easing: easing);
 	}
@@ -99,10 +111,12 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 			{
 				// point data is [[...], [...]]
 				case JsonTokenType.StartArray:
+					pointDatas.Add(ParsePointData(ref reader, false));
+					break;
 				// point data is [...]
 				case JsonTokenType.Number:
 				case JsonTokenType.String:
-					pointDatas.Add(ParsePointData(ref reader));
+					pointDatas.Add(ParsePointData(ref reader, true));
 					break;
 
 				default:
