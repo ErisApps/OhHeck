@@ -10,12 +10,14 @@ namespace OhHeck.Core.Analyzer;
 
 public class WarningManager
 {
-	private List<IBeatmapWarning> _beatmapWarnings = new();
+	private readonly List<IBeatmapWarning> _beatmapWarnings = new();
 	private static readonly Type IBeatmapWarningType = typeof(IBeatmapWarning);
 	private static readonly Type IAnalyzableType = typeof(IAnalyzable);
 
 	private readonly IContainer _container;
 	private readonly ILogger _logger;
+
+	private HashSet<string> _suppressedWarnings = new();
 
 	public WarningManager(IContainer container, ILogger logger)
 	{
@@ -23,13 +25,14 @@ public class WarningManager
 		_logger = logger;
 	}
 
-	public void Init()
+	public void Init(HashSet<string> suppressedWarnings)
 	{
+		_suppressedWarnings = suppressedWarnings;
 		foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
 		{
 			var warningAttribute = type.GetCustomAttribute<BeatmapWarningAttribute>();
 
-			if (warningAttribute is null)
+			if (warningAttribute is null || suppressedWarnings.Contains(warningAttribute.Name))
 			{
 				continue;
 			}
@@ -55,6 +58,12 @@ public class WarningManager
 	// Nullable
 	public void Analyze(IAnalyzable? analyzable, IAnalyzable? parent, Type type)
 	{
+		// Early return
+		if (_beatmapWarnings.Count == 0)
+		{
+			return;
+		}
+
 		var friendlyName = analyzable?.GetFriendlyName() ?? type.Name;
 		var fieldInfos = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
 

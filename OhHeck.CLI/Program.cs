@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DryIoc;
@@ -28,7 +30,7 @@ var defaultLogger = container.Resolve<ILogger>();
 
 container.Register<WarningManager, WarningManager>(Reuse.Singleton);
 var warningManager = container.Resolve<WarningManager>();
-warningManager.Init();
+warningManager.Init(GetSuppresedWarnings(args));
 
 void TestMap(string name)
 {
@@ -80,3 +82,9 @@ TestMap("SomewhereOutThereEPlus");
 
 
 return 0;
+
+
+HashSet<string> GetSuppresedWarnings(IEnumerable<string> args)
+{
+	return args.Where(s => s.StartsWith("-w")).Select(s => s["-w".Length..]).ToHashSet();
+}
