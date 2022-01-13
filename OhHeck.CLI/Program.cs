@@ -10,6 +10,7 @@ using OhHeck.Core.Analyzer;
 using OhHeck.Core.Models.Beatmap;
 using Serilog;
 
+#region Startup
 using var log = new LoggerConfiguration()
 	.WriteTo.Console()
 	.CreateLogger();
@@ -26,15 +27,14 @@ container.Register(
 	Made.Of(() => Log.ForContext(Arg.Index<Type>(0)), r => r.Parent.ImplementationType),
 	setup: Setup.With(condition: r => r.Parent.ImplementationType != null));
 
-var defaultLogger = container.Resolve<ILogger>();
-
 container.Register<WarningManager, WarningManager>(Reuse.Singleton);
 var warningManager = container.Resolve<WarningManager>();
-warningManager.Init(GetSuppresedWarnings(args));
+warningManager.Init(GetSuppressedWarnings(args));
+#endregion
 
 void TestMap(string name)
 {
-	defaultLogger.Information($"Testing map {name}");
+	log.Information($"Testing map {name}");
 	var fileStream = File.OpenRead($"./test_maps/{name}.dat");
 
 	var options = new JsonSerializerOptions()
@@ -47,18 +47,18 @@ void TestMap(string name)
 	var beatmapSaveData = JsonSerializer.Deserialize<BeatmapSaveData>(fileStream, options);
 	stopwatch.Stop();
 
-	defaultLogger.Information($"Parsed beatmap in {stopwatch.ElapsedMilliseconds}ms");
+	log.Information($"Parsed beatmap in {stopwatch.ElapsedMilliseconds}ms");
 
 	if (beatmapSaveData is null)
 	{
-		defaultLogger.Information("Beatmap is null. Like my love and sanity");
+		log.Information("Beatmap is null. Like my love and sanity");
 		return;
 	}
 
-	defaultLogger.Information($"Version {beatmapSaveData.Version}");
-	defaultLogger.Information($"Events {beatmapSaveData.Events.Count}");
-	defaultLogger.Information($"Notes {beatmapSaveData.Notes.Count}");
-	defaultLogger.Information($"Obstacles {beatmapSaveData.Obstacles.Count}");
+	log.Information($"Version {beatmapSaveData.Version}");
+	log.Information($"Events {beatmapSaveData.Events.Count}");
+	log.Information($"Notes {beatmapSaveData.Notes.Count}");
+	log.Information($"Obstacles {beatmapSaveData.Obstacles.Count}");
 
 	if (beatmapSaveData.BeatmapCustomData is null)
 	{
@@ -67,24 +67,24 @@ void TestMap(string name)
 
 	var beatmapCustomData = beatmapSaveData.BeatmapCustomData;
 
-	defaultLogger.Information($"Beatmap custom data is not null, noozle!");
+	log.Information("Beatmap custom data is not null, noozle!");
 
-	defaultLogger.Information($"Point defs: {beatmapCustomData.PointDefinitions?.Count ?? -1}");
-	defaultLogger.Information($"Environment enhancements: {beatmapCustomData.EnvironmentEnhancements?.Count ?? -1}");
-	defaultLogger.Information($"Custom Events: {beatmapCustomData.CustomEvents?.Count ?? -1}");
+	log.Information($"Point defs: {beatmapCustomData.PointDefinitions?.Count ?? -1}");
+	log.Information($"Environment enhancements: {beatmapCustomData.EnvironmentEnhancements?.Count ?? -1}");
+	log.Information($"Custom Events: {beatmapCustomData.CustomEvents?.Count ?? -1}");
 
 	warningManager.AnalyzeBeatmap(beatmapSaveData);
 }
 
 TestMap("CentipedeEPlus");
-defaultLogger.Information(string.Empty);
+log.Information(string.Empty);
 TestMap("SomewhereOutThereEPlus");
 
 
 return 0;
 
 
-HashSet<string> GetSuppresedWarnings(IEnumerable<string> args)
+HashSet<string> GetSuppressedWarnings(IEnumerable<string> args)
 {
 	return args.Where(s => s.StartsWith("-w")).Select(s => s["-w".Length..]).ToHashSet();
 }
