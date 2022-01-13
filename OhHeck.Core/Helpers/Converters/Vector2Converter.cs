@@ -13,27 +13,18 @@ public class Vector2Converter : JsonConverter<Vector2>
 		{
 			throw new JsonException($"Expected {JsonTokenType.StartArray}, got {reader.TokenType}. Mappers, what");
 		}
-
-		var values = new float[2];
-		var count = 0;
-
-		while (reader.Read())
+		Vector2 v = new();
+		reader.Read();
+		v.x = (float) reader.GetDouble();
+		reader.Read();
+		v.y = (float) reader.GetDouble();
+		reader.Read();
+		if (reader.TokenType != JsonTokenType.EndArray)
 		{
-			if (reader.TokenType == JsonTokenType.EndArray)
-			{
-				break;
-			}
-
-			if (count >= 2)
-			{
-				continue;
-			}
-
-			values[count] = (float) reader.GetDouble();
-			count++;
+			throw new JsonException($"Expected {JsonTokenType.EndArray}, got {reader.TokenType} for {nameof(Vector2)}");
 		}
-
-		return new Vector2(values[0], values[1]);
+		reader.Read();
+		return v;
 	}
 
 	public override void Write(Utf8JsonWriter writer, Vector2 value, JsonSerializerOptions options)
