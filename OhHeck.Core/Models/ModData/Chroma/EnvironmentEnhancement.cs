@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using OhHeck.Core.Analyzer;
 
 namespace OhHeck.Core.Models.ModData.Chroma;
 
-public class EnvironmentEnhancement
+public class EnvironmentEnhancement : IAnalyzable
 {
 	// {
 	// 	"_id": "^.*\\[\\d*[13579]\\]BigTrackLaneRing\\(Clone\\)$",
@@ -26,4 +27,6 @@ public class EnvironmentEnhancement
 
 	[JsonExtensionData]
 	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
+
+	public string GetFriendlyName() => "EnvironmentEnhancement";
 }

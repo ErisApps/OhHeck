@@ -10,4 +10,10 @@
       <Folder Include="Models\ModData\Noodle" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="DryIoc.dll" Version="4.8.6" />
+      <PackageReference Include="Serilog" Version="2.10.0" />
+      <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
+    </ItemGroup>
+
 </Project>

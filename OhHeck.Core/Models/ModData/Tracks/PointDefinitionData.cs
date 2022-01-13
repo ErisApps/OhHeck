@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using OhHeck.Core.Analyzer;
 using OhHeck.Core.Helpers.Converters;
 
 namespace OhHeck.Core.Models.ModData.Tracks;
 
-public class PointDefinitionData
+public class PointDefinitionData : IAnalyzable
 {
 	public PointDefinitionData(string name, List<PointData> points)
 	{
@@ -21,4 +22,6 @@ public class PointDefinitionData
 	[JsonPropertyName("_points")]
 	[JsonConverter(typeof(PointDataListConverter))]
 	public List<PointData> Points { get; }
+
+	public string GetFriendlyName() => "PointDefinition";
 }
