@@ -10,7 +10,7 @@ namespace OhHeck.Core.Analyzer;
 
 public class WarningManager
 {
-	private readonly List<IBeatmapWarning> _beatmapWarnings = new();
+	private readonly Dictionary<string, IBeatmapWarning> _beatmapWarnings = new();
 	private static readonly Type IBeatmapWarningType = typeof(IBeatmapWarning);
 	private static readonly Type IAnalyzableType = typeof(IAnalyzable);
 
@@ -37,6 +37,11 @@ public class WarningManager
 				continue;
 			}
 
+			if (_beatmapWarnings.TryGetValue(warningAttribute.Name, out var existingWarning))
+			{
+				throw new InvalidOperationException($"Beatmap warning {warningAttribute} already exists tied to {existingWarning.GetType()}");
+			}
+
 			if (!IBeatmapWarningType.IsAssignableFrom(type))
 			{
 				throw new InvalidOperationException($"{type} must inherit {nameof(IBeatmapWarning)}");
@@ -46,7 +51,7 @@ public class WarningManager
 			_logger.Debug($"Class {type} has warning attribute");
 
 			var instance = (IBeatmapWarning) _container.New(type);
-			_beatmapWarnings.Add(instance);
+			_beatmapWarnings[warningAttribute.Name] = instance;
 		}
 	}
 
@@ -79,7 +84,7 @@ public class WarningManager
 			}
 
 			var warnings = _beatmapWarnings
-				.Select(warning => warning.Validate(fieldInfo, fieldValue))
+				.Select(warning => warning.Value.Validate(fieldInfo, fieldValue))
 				.Where(s => s is not null).ToList();
 
 			if (warnings.Count == 0)
