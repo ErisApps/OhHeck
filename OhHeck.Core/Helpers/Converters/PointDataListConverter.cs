@@ -33,7 +33,7 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 					break;
 				case JsonTokenType.String:
 					var str = reader.GetString()!;
-					if (str == "splineCatmullRom")
+					if (str == PointData.SMOOTHIDENTIFIER)
 					{
 						smooth = true;
 					}
@@ -71,7 +71,7 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 
 		if (point.Smooth)
 		{
-			writer.WriteStringValue("splineCatmullRom");
+			writer.WriteStringValue(PointData.SMOOTHIDENTIFIER);
 		}
 		writer.WriteEndArray();
 	}

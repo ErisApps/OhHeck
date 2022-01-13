@@ -15,6 +15,7 @@ public class PointData : IAnalyzable
 	public Functions? Easing { get; }
 
 	public bool Smooth { get; } = false;
+	internal const string SMOOTHIDENTIFIER = "splineCatmullRom";
 
 	public PointData(float[] data, float time, Functions? easing, bool smooth)
 	{
@@ -38,7 +39,7 @@ public class PointData : IAnalyzable
 					break;
 				case string str:
 				{
-					if (str == "splineCatmullRom")
+					if (str == SMOOTHIDENTIFIER)
 					{
 						Smooth = true;
 					}

@@ -29,7 +29,7 @@ public class BeatmapCustomData : IAnalyzable
 		PointDefinitions = pointDefinitions;
 	}
 
-	public string GetFriendlyName() => "BeatmapCustomData";
+	public string GetFriendlyName() => nameof(BeatmapCustomData);
 }
 
 public class BeatmapCustomEvent : IAnalyzable
@@ -50,7 +50,7 @@ public class BeatmapCustomEvent : IAnalyzable
 		Data = data;
 	}
 
-	public string GetFriendlyName() => "BeatmapCustomEvent";
+	public string GetFriendlyName() => nameof(BeatmapCustomEvent);
 }
 
 
