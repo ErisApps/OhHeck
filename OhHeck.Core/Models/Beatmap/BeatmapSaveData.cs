@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Models.Beatmap.Enums;
@@ -23,7 +24,7 @@ public class BeatmapSaveData : IAnalyzable
 	public BeatmapCustomData? BeatmapCustomData { get; }
 
 	[JsonExtensionData]
-	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
+	public Dictionary<string, JsonElement> DontCareAboutThisData { get; set; } = new();
 
 	public BeatmapSaveData(string? version, List<EventData> events, List<ObstacleData> obstacles, List<ObstacleData> notes, BeatmapCustomData? beatmapCustomData)
 	{

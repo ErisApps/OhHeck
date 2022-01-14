@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Models.ModData.Chroma;
@@ -10,25 +11,25 @@ namespace OhHeck.Core.Models.Beatmap;
 public class BeatmapCustomData : IAnalyzable
 {
 	[JsonPropertyName("_environment")]
-	public List<EnvironmentEnhancement>? EnvironmentEnhancements { get; }
+	public List<EnvironmentEnhancement> EnvironmentEnhancements { get; } = new();
 
 	[JsonPropertyName("_customEvents")]
-	public List<BeatmapCustomEvent>? CustomEvents { get; }
+	public List<BeatmapCustomEvent> CustomEvents { get; } = new();
 
 	[JsonPropertyName("_pointDefinitions")]
-	public List<PointDefinitionData>? PointDefinitions { get; }
+	public List<PointDefinitionData> PointDefinitions { get; } = new();
 
 	[JsonExtensionData]
-	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
+	public Dictionary<string, JsonElement> DontCareAboutThisData { get; set; } = new();
 
-	public BeatmapCustomData(List<EnvironmentEnhancement>? environmentEnhancements, List<BeatmapCustomEvent>? customEvents, List<PointDefinitionData>? pointDefinitions)
+	public BeatmapCustomData(List<EnvironmentEnhancement> environmentEnhancements, List<BeatmapCustomEvent> customEvents, List<PointDefinitionData> pointDefinitions)
 	{
 		EnvironmentEnhancements = environmentEnhancements;
 		CustomEvents = customEvents;
 		PointDefinitions = pointDefinitions;
 	}
 
-	public string GetFriendlyName() => "BeatmapCustomData";
+	public string GetFriendlyName() => nameof(BeatmapCustomData);
 }
 
 public class BeatmapCustomEvent : IAnalyzable
@@ -49,7 +50,7 @@ public class BeatmapCustomEvent : IAnalyzable
 		Data = data;
 	}
 
-	public string GetFriendlyName() => "BeatmapCustomEvent";
+	public string GetFriendlyName() => nameof(BeatmapCustomEvent);
 }
 
 
@@ -61,46 +62,46 @@ public class ObjectCustomData
 	public Dictionary<string, object>? animation;
 
 	[JsonPropertyName("_position")]
-	public Vector2? Position;
+	public List<float> Position { get; } = new();
 
 	[JsonPropertyName("_rotation")]
-	public Vector3? Rotation;
+	public Vector3? Rotation { get; set; }
 
 	[JsonPropertyName("_localRotation")]
-	public Vector3? LocalRotation;
+	public Vector3? LocalRotation { get; set; }
 
 	[JsonPropertyName("_noteJumpMovementSpeed")]
-	public float? NoteJumpMovementSpeed;
+	public float? NoteJumpMovementSpeed { get; set; }
 
 	[JsonPropertyName("_noteJumpStartBeatOffset")]
-	public float? NoteJumpStartBeatOffset;
+	public float? NoteJumpStartBeatOffset { get; set; }
 
 	// mappers worst enemy
 	[JsonPropertyName("_fake")]
-	public FakeTruthy? Fake;
+	public FakeTruthy? Fake { get; set; }
 
 	[JsonPropertyName("_interactable")]
-	public FakeTruthy? Cuttable;
+	public FakeTruthy? Cuttable { get; set; }
 
 
 	[JsonExtensionData]
-	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
+	public Dictionary<string, JsonElement> DontCareAboutThisData { get; } = new();
 }
 
 public class ObstacleCustomData : ObjectCustomData, IAnalyzable
 {
-	public string GetFriendlyName() => "ObstacleCustomData";
+	public string GetFriendlyName() => nameof(ObstacleCustomData);
 }
 
 public class NoteCustomData : ObjectCustomData, IAnalyzable
 {
-	public string GetFriendlyName() => "NoteCustomData";
+	public string GetFriendlyName() => nameof(NoteCustomData);
 }
 
 public class EventCustomData : IAnalyzable
 {
 	[JsonExtensionData]
-	public Dictionary<string, object> DontCareAboutThisData { get; set; } = new();
+	public Dictionary<string, JsonElement> DontCareAboutThisData { get; } = new();
 
-	public string GetFriendlyName() => "EventCustomData";
+	public string GetFriendlyName() => nameof(EventCustomData);
 }

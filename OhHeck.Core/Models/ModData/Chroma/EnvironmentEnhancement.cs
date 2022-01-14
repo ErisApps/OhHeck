@@ -21,7 +21,6 @@ public class EnvironmentEnhancement : IAnalyzable
 	[JsonPropertyName("_id")]
 	public string Id { get; }
 
-
 	[JsonPropertyName("_lookupMethod")]
 	[JsonConverter(typeof(JsonStringEnumConverter))]
 	public LookupMethod LookupMethod { get; }
