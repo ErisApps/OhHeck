@@ -26,6 +26,9 @@ using var log = new LoggerConfiguration()
 
 Log.Logger = log;
 
+// if -1, infinite warnings
+var maxWarningCount = GetWarningCount(args) ?? 20;
+
 using var container = new Container();
 
 // default logger
@@ -85,8 +88,15 @@ void TestMap(string name)
 	WarningOutput warningOutput = new();
 	warningManager.AnalyzeBeatmap(beatmapSaveData, warningOutput);
 
+	var warningCount = 0;
 	foreach (var (message, warningInfo) in warningOutput.GetWarnings())
 	{
+		warningCount++;
+		if (maxWarningCount != -1 && warningCount > maxWarningCount)
+		{
+			break;
+		}
+
 		var (type, memberLocation, parent) = warningInfo;
 		log.Warning($"Warning: {type}:{{{memberLocation}}} {message}");
 		if (parent is not null)
@@ -96,6 +106,14 @@ void TestMap(string name)
 
 		log.Warning("");
 	}
+
+	if (warningCount <= maxWarningCount || maxWarningCount == -1)
+	{
+		return;
+	}
+
+	log.Warning($"Warning count exceeded max warning count {maxWarningCount}");
+	log.Warning($"Remaining {warningOutput.GetWarnings().Count() - warningCount}");
 }
 
 TestMap("CentipedeEPlus");
@@ -109,4 +127,14 @@ return 0;
 HashSet<string> GetSuppressedWarnings(IEnumerable<string> args)
 {
 	return args.Where(s => s.StartsWith("-w")).Select(s => s["-w".Length..]).ToHashSet();
+}
+
+int? GetWarningCount(IEnumerable<string> args)
+{
+	if (int.TryParse(args.FirstOrDefault(s => s.StartsWith("-wc ")), out var i))
+	{
+		return i;
+	}
+
+	return null;
 }
