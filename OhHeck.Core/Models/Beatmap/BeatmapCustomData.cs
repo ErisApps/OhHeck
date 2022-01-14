@@ -11,13 +11,13 @@ namespace OhHeck.Core.Models.Beatmap;
 public class BeatmapCustomData : IAnalyzable
 {
 	[JsonPropertyName("_environment")]
-	public List<EnvironmentEnhancement> EnvironmentEnhancements { get; } = new();
+	public List<EnvironmentEnhancement>? EnvironmentEnhancements { get; }
 
 	[JsonPropertyName("_customEvents")]
-	public List<BeatmapCustomEvent> CustomEvents { get; } = new();
+	public List<BeatmapCustomEvent>? CustomEvents { get; }
 
 	[JsonPropertyName("_pointDefinitions")]
-	public List<PointDefinitionData> PointDefinitions { get; } = new();
+	public List<PointDefinitionData>? PointDefinitions { get; }
 
 	[JsonExtensionData]
 	public Dictionary<string, JsonElement> DontCareAboutThisData { get; set; } = new();
@@ -62,7 +62,7 @@ public class ObjectCustomData
 	public Dictionary<string, object>? animation;
 
 	[JsonPropertyName("_position")]
-	public List<float> Position { get; } = new();
+	public List<float>? Position { get; }
 
 	[JsonPropertyName("_rotation")]
 	public Vector3? Rotation { get; set; }
