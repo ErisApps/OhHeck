@@ -10,6 +10,13 @@ using OhHeck.Core.Analyzer;
 using OhHeck.Core.Models.Beatmap;
 using Serilog;
 
+// TODO: Optimizations
+// for example:
+// omit "_time": 0 // time is 0 by default, we can save a few bytes
+// [[..., 0]] -> [...] // save a few bytes
+// round point datas and yeet unnecessary
+// make fern's life less painful
+
 #region Startup
 using var log = new LoggerConfiguration()
 	.WriteTo.Console()
