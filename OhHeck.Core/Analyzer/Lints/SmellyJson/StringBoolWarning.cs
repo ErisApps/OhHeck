@@ -1,7 +1,7 @@
 ﻿using System;
 using OhHeck.Core.Models.Structs;
 
-namespace OhHeck.Core.Analyzer.SmellyJson;
+namespace OhHeck.Core.Analyzer.Lints.SmellyJson;
 
 [BeatmapWarning("string-bool")]
 public class StringBoolAnalyzer : IBeatmapAnalyzer {

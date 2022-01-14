@@ -4,7 +4,7 @@ using System.Linq;
 using OhHeck.Core.Helpers.Enumerable;
 using OhHeck.Core.Models.ModData.Tracks;
 
-namespace OhHeck.Core.Analyzer.SmellyJson;
+namespace OhHeck.Core.Analyzer.Lints.Animation;
 
 [BeatmapWarning("duplicate-point-data")]
 public class DuplicatePointData : IBeatmapAnalyzer {
