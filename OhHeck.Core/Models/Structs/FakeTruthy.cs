@@ -6,10 +6,10 @@ namespace OhHeck.Core.Models.Structs;
 [JsonConverter(typeof(FakeTruthyConverter))]
 public enum FakeTruthy
 {
-	TRUE = 1,
-	FALSE = 0,
-	STRING_TRUE = 1,
-	STRING_FALSE = 0
+	TRUE,
+	FALSE,
+	STRING_TRUE,
+	STRING_FALSE
 }
 
 public static class FakeTruthyExtensions
