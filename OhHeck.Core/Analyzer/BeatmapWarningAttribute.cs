@@ -1,8 +1,10 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace OhHeck.Core.Analyzer;
 
-[System.AttributeUsage(AttributeTargets.Class)]
+[AttributeUsage(AttributeTargets.Class)]
+[MeansImplicitUse]
 public class BeatmapWarningAttribute : Attribute
 {
 	public string Name { get; }

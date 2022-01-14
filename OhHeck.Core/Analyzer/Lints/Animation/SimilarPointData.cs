@@ -4,18 +4,18 @@ using System.Linq;
 using OhHeck.Core.Helpers.Enumerable;
 using OhHeck.Core.Models.ModData.Tracks;
 
-namespace OhHeck.Core.Analyzer.SmellyJson;
+namespace OhHeck.Core.Analyzer.Lints.Animation;
 
 [BeatmapWarning("similar-point-data")]
-public class SimilarPointData : IBeatmapWarning {
+public class SimilarPointData : IBeatmapAnalyzer {
 
 	// TODO: Test
 	// I've got no idea if this is a reliable algorithm
-	public string? Validate(Type fieldType, object? value)
+	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput)
 	{
 		if (value is not List<PointData> { Count: > 1 } pointDatas)
 		{
-			return null;
+			return;
 		}
 
 		var prevPoint = pointDatas.First(); // if empty, we have a problem
@@ -41,12 +41,10 @@ public class SimilarPointData : IBeatmapWarning {
 			// Both points are identical
 			if (prevPoint.Data.AreFloatsSimilar(point.Data, timeDifference))
 			{
-				return $"Point data are too similar relative to the time difference {timeDifference}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} Point2: {point.Data.ArrayToString()}:{point.Time}";
+				warningOutput.WriteWarning($"Point data are too similar relative to the time difference {timeDifference}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} Point2: {point.Data.ArrayToString()}:{point.Time}");
 			}
 
 			prevPoint = point;
 		}
-
-		return null;
 	}
 }

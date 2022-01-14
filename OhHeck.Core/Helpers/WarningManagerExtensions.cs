@@ -1,16 +1,21 @@
-﻿using OhHeck.Core.Models.Beatmap;
+﻿using OhHeck.Core.Analyzer;
+using OhHeck.Core.Models.Beatmap;
 
-namespace OhHeck.Core.Analyzer;
+namespace OhHeck.Core.Helpers;
 
 public static class WarningManagerExtensions
 {
-	public static void AnalyzeBeatmap(this WarningManager warningManager, BeatmapSaveData beatmapSaveData)
-	{
-		warningManager.Analyze(beatmapSaveData);
+	// Nonnull
+	public static void Analyze(this WarningManager warningManager, IAnalyzable analyzable, IWarningOutput warningOutput) => warningManager.Analyze(analyzable, null, analyzable.GetType(), warningOutput);
+	public static void Analyze(this WarningManager warningManager, IAnalyzable analyzable, IAnalyzable parent, IWarningOutput warningOutput) => warningManager.Analyze(analyzable, parent, analyzable.GetType(), warningOutput);
 
-		beatmapSaveData.Events.ForEach(warningManager.Analyze);
-		beatmapSaveData.Notes.ForEach(warningManager.Analyze);
-		beatmapSaveData.Obstacles.ForEach(warningManager.Analyze);
+	public static void AnalyzeBeatmap(this WarningManager warningManager, BeatmapSaveData beatmapSaveData, IWarningOutput warningOutput)
+	{
+		warningManager.Analyze(beatmapSaveData, warningOutput);
+
+		beatmapSaveData.Events.ForEach(x => warningManager.Analyze(x, warningOutput));
+		beatmapSaveData.Notes.ForEach(x => warningManager.Analyze(x, warningOutput));
+		beatmapSaveData.Obstacles.ForEach(x => warningManager.Analyze(x, warningOutput));
 
 		if (beatmapSaveData.BeatmapCustomData is null)
 		{
@@ -18,10 +23,10 @@ public static class WarningManagerExtensions
 		}
 
 		var customData = beatmapSaveData.BeatmapCustomData;
-		warningManager.Analyze(customData);
+		warningManager.Analyze(customData, warningOutput);
 
-		customData.CustomEvents?.ForEach(warningManager.Analyze);
-		customData.EnvironmentEnhancements?.ForEach(warningManager.Analyze);
-		customData.PointDefinitions?.ForEach(warningManager.Analyze);
+		customData.CustomEvents?.ForEach(x => warningManager.Analyze(x, warningOutput));
+		customData.EnvironmentEnhancements?.ForEach(x => warningManager.Analyze(x, warningOutput));
+		customData.PointDefinitions?.ForEach(x => warningManager.Analyze(x, warningOutput));
 	}
 }

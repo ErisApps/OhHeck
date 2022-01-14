@@ -7,8 +7,17 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using DryIoc;
 using OhHeck.Core.Analyzer;
+using OhHeck.Core.Analyzer.Implementation;
+using OhHeck.Core.Helpers;
 using OhHeck.Core.Models.Beatmap;
 using Serilog;
+
+// TODO: Optimizations
+// for example:
+// omit "_time": 0 // time is 0 by default, we can save a few bytes
+// [[..., 0]] -> [...] // save a few bytes
+// round point datas and yeet unnecessary
+// make fern's life less painful
 
 #region Startup
 using var log = new LoggerConfiguration()
@@ -16,6 +25,9 @@ using var log = new LoggerConfiguration()
 	.CreateLogger();
 
 Log.Logger = log;
+
+// if -1, infinite warnings
+var maxWarningCount = GetWarningCount(args) ?? 20;
 
 using var container = new Container();
 
@@ -73,7 +85,35 @@ void TestMap(string name)
 	log.Information($"Environment enhancements: {beatmapCustomData.EnvironmentEnhancements?.Count ?? -1}");
 	log.Information($"Custom Events: {beatmapCustomData.CustomEvents?.Count ?? -1}");
 
-	warningManager.AnalyzeBeatmap(beatmapSaveData);
+	WarningOutput warningOutput = new();
+	warningManager.AnalyzeBeatmap(beatmapSaveData, warningOutput);
+
+	var warningCount = 0;
+	foreach (var (message, warningInfo) in warningOutput.GetWarnings())
+	{
+		warningCount++;
+		if (maxWarningCount != -1 && warningCount > maxWarningCount)
+		{
+			break;
+		}
+
+		var (type, memberLocation, parent) = warningInfo;
+		log.Warning($"Warning: {type}:{{{memberLocation}}} {message}");
+		if (parent is not null)
+		{
+			log.Warning($"Parent {parent.GetFriendlyName()} {parent.ExtraData()}");
+		}
+
+		log.Warning("");
+	}
+
+	if (warningCount <= maxWarningCount || maxWarningCount == -1)
+	{
+		return;
+	}
+
+	log.Warning($"Warning count exceeded max warning count {maxWarningCount}");
+	log.Warning($"Remaining {warningOutput.GetWarnings().Count() - warningCount}");
 }
 
 TestMap("CentipedeEPlus");
@@ -87,4 +127,14 @@ return 0;
 HashSet<string> GetSuppressedWarnings(IEnumerable<string> args)
 {
 	return args.Where(s => s.StartsWith("-w")).Select(s => s["-w".Length..]).ToHashSet();
+}
+
+int? GetWarningCount(IEnumerable<string> args)
+{
+	if (int.TryParse(args.FirstOrDefault(s => s.StartsWith("-wc ")), out var i))
+	{
+		return i;
+	}
+
+	return null;
 }
