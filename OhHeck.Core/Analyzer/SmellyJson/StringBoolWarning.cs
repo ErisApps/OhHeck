@@ -1,19 +1,16 @@
 ﻿using System;
-using System.Reflection;
 using OhHeck.Core.Models.Structs;
 
 namespace OhHeck.Core.Analyzer.SmellyJson;
 
 [BeatmapWarning("string-bool")]
-public class StringBoolWarning : IBeatmapWarning {
+public class StringBoolAnalyzer : IBeatmapAnalyzer {
 
-	public string? Validate(Type fieldType, object? value)
+	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput)
 	{
 		if (value is FakeTruthy fakeTruthy && fakeTruthy.IsString())
 		{
-			return $"Boolean is string: \"{fakeTruthy}\"";
+			warningOutput.WriteWarning($"Boolean is string: \"{fakeTruthy}\"");
 		}
-
-		return null;
 	}
 }

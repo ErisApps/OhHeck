@@ -7,14 +7,14 @@ using OhHeck.Core.Models.ModData.Tracks;
 namespace OhHeck.Core.Analyzer.SmellyJson;
 
 [BeatmapWarning("duplicate-point-data")]
-public class DuplicatePointData : IBeatmapWarning {
+public class DuplicatePointData : IBeatmapAnalyzer {
 
 	// TODO: Test
-	public string? Validate(Type fieldType, object? value)
+	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput)
 	{
 		if (value is not List<PointData> { Count: > 1 } pointDatas)
 		{
-			return null;
+			return;
 		}
 
 		var prevPoint = pointDatas.First(); // if empty, we have a problem
@@ -25,12 +25,10 @@ public class DuplicatePointData : IBeatmapWarning {
 			// Both points are identical
 			if (prevPoint.Data.AreArrayElementsIdentical(point.Data))
 			{
-				return $"Point data are identical: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} Point2: {point.Data.ArrayToString()}:{point.Time}";
+				warningOutput.WriteWarning($"Point data are identical: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} Point2: {point.Data.ArrayToString()}:{point.Time}");
 			}
 
 			prevPoint = point;
 		}
-
-		return null;
 	}
 }

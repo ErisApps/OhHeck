@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using DryIoc;
-using OhHeck.Core.Models.Beatmap;
 using Serilog;
 
 namespace OhHeck.Core.Analyzer;
 
 public class WarningManager
 {
-	private readonly Dictionary<string, IBeatmapWarning> _beatmapWarnings = new();
-	private static readonly Type IBeatmapWarningType = typeof(IBeatmapWarning);
+	private readonly Dictionary<string, IBeatmapAnalyzer> _beatmapAnalyzers = new();
+	private static readonly Type IBeatmapAnalyzerType = typeof(IBeatmapAnalyzer);
 	private static readonly Type IAnalyzableType = typeof(IAnalyzable);
 
 	private readonly IContainer _container;
@@ -37,41 +36,35 @@ public class WarningManager
 				continue;
 			}
 
-			if (_beatmapWarnings.TryGetValue(warningAttribute.Name, out var existingWarning))
+			if (_beatmapAnalyzers.TryGetValue(warningAttribute.Name, out var existingWarning))
 			{
-				throw new InvalidOperationException($"Beatmap warning {warningAttribute} already exists tied to {existingWarning.GetType()}");
+				throw new InvalidOperationException($"Beatmap analyzer {warningAttribute} already exists tied to {existingWarning.GetType()}");
 			}
 
-			if (!IBeatmapWarningType.IsAssignableFrom(type))
+			if (!IBeatmapAnalyzerType.IsAssignableFrom(type))
 			{
-				throw new InvalidOperationException($"{type} must inherit {nameof(IBeatmapWarning)}");
+				throw new InvalidOperationException($"{type} must inherit {nameof(IBeatmapAnalyzer)}");
 			}
 
-			// TODO: Use logger framework?
 			_logger.Debug($"Class {type} has warning attribute");
 
-			var instance = (IBeatmapWarning) _container.New(type);
-			_beatmapWarnings[warningAttribute.Name] = instance;
+			var instance = (IBeatmapAnalyzer) _container.New(type);
+			_beatmapAnalyzers[warningAttribute.Name] = instance;
 		}
 	}
 
-
-	// Nonnull
-	public void Analyze(IAnalyzable analyzable) => Analyze(analyzable, null, analyzable.GetType());
-	public void Analyze(IAnalyzable analyzable, IAnalyzable parent) => Analyze(analyzable, parent, analyzable.GetType());
-
 	// Nullable
-	public void Analyze(IAnalyzable? analyzable, IAnalyzable? parent, Type type)
+	public void Analyze(IAnalyzable? analyzable, IAnalyzable? parent, Type type, IWarningOutput warningOutput)
 	{
 		// Early return
-		if (_beatmapWarnings.Count == 0)
+		if (_beatmapAnalyzers.Count == 0)
 		{
 			return;
 		}
 
 		var friendlyName = analyzable?.GetFriendlyName() ?? type.Name;
 
-		var memberInfos = AnalyzeMemberInfo(analyzable, parent, type, friendlyName);
+		var memberInfos = AnalyzeMemberInfo(analyzable, parent, type, friendlyName, warningOutput);
 
 		if (analyzable is null)
 		{
@@ -79,19 +72,21 @@ public class WarningManager
 		}
 
 		// Now to recursively analyze
-		foreach (var (_, (memberValue, memberType)) in memberInfos)
+		foreach (var (_, (memberValue, memberType, friendlyMemberName)) in memberInfos)
 		{
 			if (!IAnalyzableType.IsAssignableFrom(memberType))
 			{
 				continue;
 			}
 
+			warningOutput.PushWarningInfo(new WarningInfo(Type: friendlyName, MemberLocation: friendlyMemberName, parent: parent));
 			var fieldValue = (IAnalyzable?) memberValue;
-			Analyze(fieldValue, analyzable, memberType);
+			Analyze(fieldValue, analyzable, memberType, warningOutput);
+			warningOutput.PopWarningInfo();
 		}
 	}
 
-	private Dictionary<MemberInfo, (object?, Type)> AnalyzeMemberInfo(IAnalyzable? analyzable, IAnalyzable? parent, IReflect type, string friendlyName)
+	private Dictionary<MemberInfo, (object?, Type, string)> AnalyzeMemberInfo(IAnalyzable? analyzable, IAnalyzable? parent, IReflect type, string friendlyName, IWarningOutput warningOutput)
 	{
 		var fieldInfos = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
 		var propInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
@@ -99,7 +94,7 @@ public class WarningManager
 		var memberInfos = fieldInfos.ToList<MemberInfo>();
 		memberInfos.AddRange(propInfos.ToList<MemberInfo>());
 
-		Dictionary<MemberInfo, (object?, Type)> memberValues = new();
+		Dictionary<MemberInfo, (object?, Type, string)> memberValues = new();
 
 
 		// Analyze each field
@@ -126,29 +121,14 @@ public class WarningManager
 				};
 			}
 
-			memberValues[memberInfo] = (memberValue, memberType!);
+			memberValues[memberInfo] = (memberValue, memberType!, friendlyMemberName);
 
-			var warnings = _beatmapWarnings
-				.Select(warning => warning.Value.Validate(memberType!, memberValue))
-				.Where(s => s is not null).ToList();
-
-			if (warnings.Count == 0)
+			warningOutput.PushWarningInfo(new WarningInfo(Type: friendlyName, MemberLocation: friendlyMemberName, parent: parent));
+			foreach (var (_, wAnalyzer) in _beatmapAnalyzers)
 			{
-				continue;
+				wAnalyzer.Validate(memberType!, memberValue, warningOutput);
 			}
-
-			foreach (var warning in warnings)
-			{
-				_logger.Warning($"Warning: {friendlyName}:{{{friendlyMemberName}}} {warning}");
-				if (parent is not null)
-				{
-					_logger.Warning($"Parent {parent.GetFriendlyName()} {parent.ExtraData()}");
-				}
-
-				_logger.Warning("");
-			}
-
-			break;
+			warningOutput.PopWarningInfo();
 		}
 		return memberValues;
 	}

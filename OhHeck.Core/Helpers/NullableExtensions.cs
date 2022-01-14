@@ -1,4 +1,4 @@
-﻿namespace OhHeck.Core.Helpers.Enumerable;
+﻿namespace OhHeck.Core.Helpers;
 
 public static class NullableExtensions
 {

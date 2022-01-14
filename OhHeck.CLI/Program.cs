@@ -7,6 +7,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using DryIoc;
 using OhHeck.Core.Analyzer;
+using OhHeck.Core.Analyzer.Implementation;
+using OhHeck.Core.Helpers;
 using OhHeck.Core.Models.Beatmap;
 using Serilog;
 
@@ -80,7 +82,20 @@ void TestMap(string name)
 	log.Information($"Environment enhancements: {beatmapCustomData.EnvironmentEnhancements?.Count ?? -1}");
 	log.Information($"Custom Events: {beatmapCustomData.CustomEvents?.Count ?? -1}");
 
-	warningManager.AnalyzeBeatmap(beatmapSaveData);
+	WarningOutput warningOutput = new();
+	warningManager.AnalyzeBeatmap(beatmapSaveData, warningOutput);
+
+	foreach (var (message, warningInfo) in warningOutput.GetWarnings())
+	{
+		var (type, memberLocation, parent) = warningInfo;
+		log.Warning($"Warning: {type}:{{{memberLocation}}} {message}");
+		if (parent is not null)
+		{
+			log.Warning($"Parent {parent.GetFriendlyName()} {parent.ExtraData()}");
+		}
+
+		log.Warning("");
+	}
 }
 
 TestMap("CentipedeEPlus");
