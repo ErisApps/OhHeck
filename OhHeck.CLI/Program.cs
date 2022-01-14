@@ -85,8 +85,11 @@ void TestMap(string name)
 	log.Information($"Environment enhancements: {beatmapCustomData.EnvironmentEnhancements?.Count ?? -1}");
 	log.Information($"Custom Events: {beatmapCustomData.CustomEvents?.Count ?? -1}");
 
+	stopwatch = Stopwatch.StartNew();
 	WarningOutput warningOutput = new();
 	warningManager.AnalyzeBeatmap(beatmapSaveData, warningOutput);
+	stopwatch.Stop();
+	log.Information("Took {Time}ms to analyze beatmap", stopwatch.ElapsedMilliseconds);
 
 	var warningCount = 0;
 	foreach (var (message, warningInfo) in warningOutput.GetWarnings())
