@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
+using OhHeck.Core.Helpers.Converters;
 using OhHeck.Core.Models.ModData.Chroma;
 using OhHeck.Core.Models.ModData.Tracks;
 using OhHeck.Core.Models.Structs;
@@ -16,6 +17,7 @@ public class BeatmapCustomData : IAnalyzable
 	[JsonPropertyName("_customEvents")]
 	public List<BeatmapCustomEvent>? CustomEvents { get; }
 
+	[JsonConverter(typeof(BeatmapPointDefinitionConverter))]
 	[JsonPropertyName("_pointDefinitions")]
 	public List<PointDefinitionData>? PointDefinitions { get; }
 
@@ -59,7 +61,8 @@ public class ObjectCustomData
 	// Unsure if the array works like PointData or always float[]
 	// Can also be a string which points to a Point Def defined in beatmap customData
 	[JsonPropertyName("_animation")]
-	public Dictionary<string, object>? animation;
+	[JsonConverter(typeof(DictionaryPointDefinitionConverter))]
+	public Dictionary<string, PointDefinitionData>? animation;
 
 	[JsonPropertyName("_position")]
 	public List<float>? Position { get; }

@@ -9,6 +9,7 @@ using DryIoc;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Analyzer.Implementation;
 using OhHeck.Core.Helpers;
+using OhHeck.Core.Helpers.Converters;
 using OhHeck.Core.Models.Beatmap;
 using Serilog;
 
@@ -55,9 +56,13 @@ void TestMap(string name)
 
 	};
 
+	PointDefinitionReferenceHandler pointDefinitionReferenceHandler = new();
+	options.ReferenceHandler = pointDefinitionReferenceHandler;
+
 	var stopwatch = Stopwatch.StartNew();
 	var beatmapSaveData = JsonSerializer.Deserialize<BeatmapSaveData>(fileStream, options);
 	stopwatch.Stop();
+	pointDefinitionReferenceHandler.Reset();
 
 	log.Information($"Parsed beatmap in {stopwatch.ElapsedMilliseconds}ms");
 
