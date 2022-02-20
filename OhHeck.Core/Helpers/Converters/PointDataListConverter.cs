@@ -20,7 +20,9 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 
 		while (reader.Read())
 		{
-			if (reader.TokenType == JsonTokenType.EndArray)
+			// If this is not a [...] point def
+			// in other words, if it's a [[...], [...]]
+			if (!single && reader.TokenType == JsonTokenType.EndArray)
 			{
 				break;
 			}
