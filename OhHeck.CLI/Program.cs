@@ -45,10 +45,15 @@ var warningManager = container.Resolve<WarningManager>();
 warningManager.Init(GetSuppressedWarnings(args));
 #endregion
 
+void TestMapDefault(string name)
+{
+	TestMap($"./test_maps/{name}.dat");
+}
+
 void TestMap(string name)
 {
 	log.Information($"Testing map {name}");
-	var fileStream = File.OpenRead($"./test_maps/{name}.dat");
+	var fileStream = File.OpenRead(name);
 
 	var options = new JsonSerializerOptions()
 	{
@@ -124,10 +129,16 @@ void TestMap(string name)
 	log.Warning($"Remaining {warningOutput.GetWarnings().Count() - warningCount}");
 }
 
-TestMap("CentipedeEPlus");
-log.Information(string.Empty);
-TestMap("SomewhereOutThereEPlus");
-
+if (args.Any(e => e == "-test"))
+{
+	TestMapDefault("CentipedeEPlus");
+	log.Information(string.Empty);
+	TestMapDefault("SomewhereOutThereEPlus");
+}
+else
+{
+	TestMap(args.First(e => !e.StartsWith("-") && !e.StartsWith("-wc ")));
+}
 
 return 0;
 
