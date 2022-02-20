@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OhHeck.Core", "OhHeck.Core\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OhHeck.CLI", "OhHeck.CLI\OhHeck.CLI.csproj", "{F056E624-9C0A-49AA-82F1-C67C703168F9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OhHeck.Tests", "OhHeck.Tests\OhHeck.Tests.csproj", "{84DE3B84-2ACE-4830-B377-749A755D9AEB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{F056E624-9C0A-49AA-82F1-C67C703168F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F056E624-9C0A-49AA-82F1-C67C703168F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F056E624-9C0A-49AA-82F1-C67C703168F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84DE3B84-2ACE-4830-B377-749A755D9AEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84DE3B84-2ACE-4830-B377-749A755D9AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84DE3B84-2ACE-4830-B377-749A755D9AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84DE3B84-2ACE-4830-B377-749A755D9AEB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
