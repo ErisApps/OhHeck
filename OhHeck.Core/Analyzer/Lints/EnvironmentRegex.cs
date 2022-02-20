@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using OhHeck.Core.Helpers;
 using OhHeck.Core.Models.ModData.Chroma;
-using OhHeck.Core.Models.Structs;
 
 namespace OhHeck.Core.Analyzer.Lints;
 
@@ -10,16 +11,20 @@ public class EnvironmentRegex : IBeatmapAnalyzer {
 
 	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput)
 	{
-		if (value is not EnvironmentEnhancement { LookupMethod: LookupMethod.Regex } environmentEnhancement)
+		if (value is not List<EnvironmentEnhancement> environmentEnhancements)
 		{
 			return;
 		}
 
-		var regex = environmentEnhancement.Id;
-
-		if (!RegexBindings.IsRegexValid(regex, out var message))
+		foreach (var regex in
+		         from environmentEnhancement in environmentEnhancements
+		         where environmentEnhancement.LookupMethod is LookupMethod.Regex
+		         select environmentEnhancement.Id)
 		{
-			warningOutput.WriteWarning(message);
+			if (!RegexBindings.IsRegexValid(regex, out var message))
+			{
+				warningOutput.WriteWarning($"{regex} is invalid: {message}");
+			}
 		}
 	}
 }
