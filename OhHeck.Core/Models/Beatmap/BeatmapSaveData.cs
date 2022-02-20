@@ -18,7 +18,7 @@ public class BeatmapSaveData : IAnalyzable
 	public List<ObstacleData> Obstacles { get; }
 
 	[JsonPropertyName("_notes")]
-	public List<ObstacleData> Notes { get; }
+	public List<NoteData> Notes { get; }
 
 	[JsonPropertyName("_customData")]
 	public BeatmapCustomData? BeatmapCustomData { get; }
@@ -26,7 +26,7 @@ public class BeatmapSaveData : IAnalyzable
 	[JsonExtensionData]
 	public Dictionary<string, JsonElement> DontCareAboutThisData { get; set; } = new();
 
-	public BeatmapSaveData(string? version, List<EventData> events, List<ObstacleData> obstacles, List<ObstacleData> notes, BeatmapCustomData? beatmapCustomData)
+	public BeatmapSaveData(string? version, List<EventData> events, List<ObstacleData> obstacles, List<NoteData> notes, BeatmapCustomData? beatmapCustomData)
 	{
 		Version = version;
 		Events = events;
