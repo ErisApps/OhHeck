@@ -4,5 +4,7 @@ public enum LookupMethod
 {
 	Regex,
 	Exact,
-	Contains
+	Contains,
+	StartsWith,
+	EndsWith
 }
