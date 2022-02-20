@@ -52,7 +52,7 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 		float time;
 		float[] animationData;
 
-		if (!single)
+		if (single)
 		{
 			// single point defs are 0 time
 			time = 0;
@@ -111,7 +111,10 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 			{
 				// point data is [[...], [...]]
 				case JsonTokenType.StartArray:
-					pointDatas.Add(ParsePointData(ref reader, false));
+					while (reader.TokenType != JsonTokenType.EndArray)
+					{
+						pointDatas.Add(ParsePointData(ref reader, false));
+					}
 					break;
 				// point data is [...]
 				case JsonTokenType.Number:
