@@ -25,5 +25,5 @@ public class FakeTruthyConverter : JsonConverter<FakeTruthy>
 		}
 	}
 
-	public override void Write(Utf8JsonWriter writer, FakeTruthy value, JsonSerializerOptions options) => writer.WriteBooleanValue(value == FakeTruthy.TRUE);
+	public override void Write(Utf8JsonWriter writer, FakeTruthy value, JsonSerializerOptions options) => writer.WriteBooleanValue(value is FakeTruthy.TRUE or FakeTruthy.STRING_TRUE);
 }
