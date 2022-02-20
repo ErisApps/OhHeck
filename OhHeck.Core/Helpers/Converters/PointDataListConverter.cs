@@ -61,7 +61,7 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 		else
 		{
 			time = preData.Last();
-			animationData = preData.GetRange(0, preData.Count - 1).ToArray();
+			animationData = preData.GetRange(0, preData.Count - 1).ToArray(); // exclude time from array
 		}
 
 		return new PointData(time: time, data: animationData, smooth: smooth, easing: easing);

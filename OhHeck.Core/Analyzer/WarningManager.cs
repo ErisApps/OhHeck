@@ -79,7 +79,7 @@ public class WarningManager
 				continue;
 			}
 
-			warningOutput.PushWarningInfo(new WarningInfo(Type: friendlyName, MemberLocation: friendlyMemberName, parent: parent));
+			warningOutput.PushWarningInfo(new WarningInfo(Type: friendlyName, MemberLocation: friendlyMemberName, Parent: parent));
 			var fieldValue = (IAnalyzable?) memberValue;
 			Analyze(fieldValue, analyzable, memberType, warningOutput);
 			warningOutput.PopWarningInfo();
@@ -123,7 +123,7 @@ public class WarningManager
 
 			memberValues[memberInfo] = (memberValue, memberType!, friendlyMemberName);
 
-			warningOutput.PushWarningInfo(new WarningInfo(Type: friendlyName, MemberLocation: friendlyMemberName, parent: parent));
+			warningOutput.PushWarningInfo(new WarningInfo(Type: friendlyName, MemberLocation: friendlyMemberName, Parent: parent));
 			foreach (var (_, wAnalyzer) in _beatmapAnalyzers)
 			{
 				wAnalyzer.Validate(memberType!, memberValue, warningOutput);

@@ -21,14 +21,15 @@ using Serilog;
 // make fern's life less painful
 
 #region Startup
+// if -1, infinite warnings
+var maxWarningCount = GetWarningCount(args) ?? 20;
+
+
 using var log = new LoggerConfiguration()
 	.WriteTo.Console()
 	.CreateLogger();
 
 Log.Logger = log;
-
-// if -1, infinite warnings
-var maxWarningCount = GetWarningCount(args) ?? 20;
 
 using var container = new Container();
 
