@@ -149,11 +149,16 @@ HashSet<string> GetSuppressedWarnings(IEnumerable<string> args)
 	return args.Where(s => s.StartsWith("-w")).Select(s => s["-w".Length..]).ToHashSet();
 }
 
-int? GetWarningCount(IEnumerable<string> args)
+int? GetWarningCount(IReadOnlyList<string> args)
 {
-	if (int.TryParse(args.FirstOrDefault(s => s.StartsWith("-wc ")), out var i))
+	for (var i = 0; i < args.Count; i++)
 	{
-		return i;
+		var s = args[i];
+
+		if (s == "-wc" && int.TryParse(args[i + 1], out var l))
+		{
+			return l;
+		}
 	}
 
 	return null;
