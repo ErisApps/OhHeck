@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using DryIoc;
+using OhHeck.Core.Helpers;
 using Serilog;
 
 namespace OhHeck.Core.Analyzer;
@@ -88,11 +88,7 @@ public class WarningManager
 
 	private Dictionary<MemberInfo, (object?, Type, string)> AnalyzeMemberInfo(IAnalyzable? analyzable, IAnalyzable? parent, IReflect type, string friendlyName, IWarningOutput warningOutput)
 	{
-		var fieldInfos = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
-		var propInfos = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-
-		var memberInfos = fieldInfos.ToList<MemberInfo>();
-		memberInfos.AddRange(propInfos.ToList<MemberInfo>());
+		var memberInfos = ReflectionUtils.GetTypeFieldsSuperRecursive(type);
 
 		Dictionary<MemberInfo, (object?, Type, string)> memberValues = new();
 

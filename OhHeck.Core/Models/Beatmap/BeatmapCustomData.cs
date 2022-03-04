@@ -56,7 +56,7 @@ public class BeatmapCustomEvent : IAnalyzable
 }
 
 
-public class ObjectCustomData
+public abstract class ObjectCustomData : IAnalyzable
 {
 	// Unsure if the array works like PointData or always float[]
 	// Can also be a string which points to a Point Def defined in beatmap customData
@@ -89,16 +89,18 @@ public class ObjectCustomData
 
 	[JsonExtensionData]
 	public Dictionary<string, JsonElement> DontCareAboutThisData { get; } = new();
+
+	public abstract string GetFriendlyName();
 }
 
-public class ObstacleCustomData : ObjectCustomData, IAnalyzable
+public class ObstacleCustomData : ObjectCustomData
 {
-	public string GetFriendlyName() => nameof(ObstacleCustomData);
+	public override string GetFriendlyName() => nameof(ObstacleCustomData);
 }
 
-public class NoteCustomData : ObjectCustomData, IAnalyzable
+public class NoteCustomData : ObjectCustomData
 {
-	public string GetFriendlyName() => nameof(NoteCustomData);
+	public override string GetFriendlyName() => nameof(NoteCustomData);
 }
 
 public class EventCustomData : IAnalyzable
