@@ -25,7 +25,7 @@ public class PointData : IAnalyzable
 		Smooth = smooth;
 	}
 
-	public PointData(List<object> data)
+	public PointData(IEnumerable<object> data)
 	{
 		List<float> preData = new();
 

@@ -20,60 +20,55 @@ public class SimilarPointDataSlope : IBeatmapAnalyzer
 
 	// Compares points a, b and c where b is between a and c.
 	// If a-b's slope is similar to a-c, it deems it unnecessary
-	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput)
-	{
-		var pointDataDictionary = PointHelper.GetPointDataDictionary(value);
-
-		if (pointDataDictionary is null)
-		{
-			return;
-		}
-
-		foreach (var (s, pointDatas) in pointDataDictionary)
+	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput) =>
+		PointLintHelper.AnalyzePoints(value, warningOutput, pointDataDictionary =>
 		{
 
-
-			// compare 3 points consecutively
-			var prevPoint = pointDatas.First(); // if empty, we have a problem
-			for (var i = 1; i < pointDatas.Count - 1; i++)
+			foreach (var (s, pointDatas) in pointDataDictionary)
 			{
-				var endPoint = pointDatas[i + 1];
-				var middlePoint = pointDatas[i];
 
 
-				if (ComparePoints(prevPoint, middlePoint, endPoint, out var middleSlope, out var endSlope))
+				// compare 3 points consecutively
+				var prevPoint = pointDatas.First(); // if empty, we have a problem
+				for (var i = 1; i < pointDatas.Count - 1; i++)
 				{
-					WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint, endSlope);
-					continue;
-				}
+					var endPoint = pointDatas[i + 1];
+					var middlePoint = pointDatas[i];
 
 
-				prevPoint = middlePoint;
+					if (ComparePoints(prevPoint, middlePoint, endPoint, out var middleSlope, out var endSlope))
+					{
+						WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint, endSlope);
+						continue;
+					}
+
+
+					prevPoint = middlePoint;
 
 #pragma warning disable CS0162
-				if (!COMPARE_ALL_PREVIOUS_POINTS)
-				{
-					continue;
-				}
-
-				for (var j = 0; j < i - 2; j++)
-				{
-					// compare every point between start and end
-					for (var k = j + 1; k < i - 1; k++)
+					if (!COMPARE_ALL_PREVIOUS_POINTS)
 					{
-						var startPoint = pointDatas[k];
-						middlePoint = pointDatas[j];
+						continue;
+					}
 
-						if (ComparePoints(startPoint, middlePoint, endPoint, out middleSlope, out endSlope))
+					for (var j = 0; j < i - 2; j++)
+					{
+						// compare every point between start and end
+						for (var k = j + 1; k < i - 1; k++)
 						{
-							WriteWarning(warningOutput, s, startPoint, middlePoint, middleSlope, endPoint, endSlope);
+							var startPoint = pointDatas[k];
+							middlePoint = pointDatas[j];
+
+							if (ComparePoints(startPoint, middlePoint, endPoint, out middleSlope, out endSlope))
+							{
+								WriteWarning(warningOutput, s, startPoint, middlePoint, middleSlope, endPoint, endSlope);
+							}
 						}
 					}
-				}
 #pragma warning restore CS0162
+				}
 			}
-		}
-	}
+		});
 
 	private static void WriteWarning(IWarningOutput warningOutput, string s, PointData startPoint, PointData middlePoint, IEnumerable<float> middleSlope, PointData endPoint, IEnumerable<float> endSlope) =>
 		warningOutput.WriteWarning($"Point data {s} slope and y intercept are closely intercepting and match easing/smooth {DIFFERENCE_THRESHOLD}: " +

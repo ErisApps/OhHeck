@@ -14,6 +14,7 @@ public class BeatmapCustomData : IAnalyzable
 	[JsonPropertyName("_environment")]
 	public List<EnvironmentEnhancement>? EnvironmentEnhancements { get; }
 
+	[JsonConverter(typeof(BeatmapCustomEventListConverter))]
 	[JsonPropertyName("_customEvents")]
 	public List<BeatmapCustomEvent>? CustomEvents { get; }
 
@@ -52,7 +53,7 @@ public class BeatmapCustomEvent : IAnalyzable
 		Data = data;
 	}
 
-	public string GetFriendlyName() => nameof(BeatmapCustomEvent);
+	public virtual string GetFriendlyName() => nameof(BeatmapCustomEvent);
 }
 
 
