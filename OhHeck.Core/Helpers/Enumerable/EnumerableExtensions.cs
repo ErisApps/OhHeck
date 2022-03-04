@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace OhHeck.Core.Helpers.Enumerable;
@@ -35,10 +36,8 @@ public static class EnumerableExtensions
 	public static string ArrayToString<T>(this IEnumerable<T?> enumerable)
 	{
 		StringBuilder builder = new("{");
-		foreach (var x in enumerable)
-		{
-			builder.Append($"{x}, ");
-		}
+
+		builder.Append(string.Join(',', enumerable.Select(x => x?.ToString() ?? "null")));
 
 		builder.Append('}');
 
