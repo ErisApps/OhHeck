@@ -7,7 +7,7 @@ namespace OhHeck.Core.Analyzer.Lints.Animation;
 [BeatmapWarning("duplicate-point-data")]
 public class DuplicatePointData : IBeatmapAnalyzer {
 
-	// TODO: Test
+	// Checks if points are duplicated
 	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput) =>
 		PointLintHelper.AnalyzePoints(value, warningOutput, pointDataDictionary =>
 		{
