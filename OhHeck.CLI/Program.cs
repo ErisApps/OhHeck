@@ -56,10 +56,13 @@ void TestMap(string name)
 	log.Information($"Testing map {name}");
 	var fileStream = File.OpenRead(name);
 
-	var options = new JsonSerializerOptions()
+	var options = new JsonSerializerOptions
 	{
-		IgnoreReadOnlyProperties = false, IgnoreReadOnlyFields = false, IncludeFields = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-
+		IgnoreReadOnlyProperties = false, IgnoreReadOnlyFields = false,
+		IncludeFields = true,
+		DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+		// mappers grr, to make configurable somehow
+		NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals
 	};
 
 	PointDefinitionReferenceHandler pointDefinitionReferenceHandler = new();
