@@ -1,17 +1,21 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Analyzer.Implementation;
 using OhHeck.Core.Helpers;
 using OhHeck.Core.Helpers.Converters;
+using OhHeck.Core.Helpers.Enumerable;
 using OhHeck.Core.Models.Beatmap;
 using Serilog.Core;
+using Serilog.Parsing;
 
 namespace OhHeck.CLI;
 
@@ -75,7 +79,7 @@ public static class Testing
 
 		var warningCount = 0;
 		var analyzerNameDictionary = new Dictionary<Type, string>();
-		foreach (var (message, warningInfo, analyzerType) in warningOutput.GetWarnings())
+		foreach (var (message, warningInfo, analyzerType, formatParams) in warningOutput.GetWarnings())
 		{
 			if (!analyzerNameDictionary.TryGetValue(analyzerType, out var analyzerName))
 			{
@@ -89,7 +93,41 @@ public static class Testing
 			}
 
 			var (type, memberLocation, parent) = warningInfo;
-			log.Warning("Warning [{AnalyzerName}]: {Type}:{{{MemberLocation}}} {Message}", analyzerName, type, memberLocation, message);
+
+
+			string messageFormatted;
+			if (formatParams != null && formatParams.Length != 0)
+			{
+				var stringBuilder = new StringBuilder(message.Length);
+				var parser = new MessageTemplateParser();
+
+				var template = parser.Parse(message);
+
+				var index = 0;
+				foreach (var tok in template.Tokens)
+				{
+					object s = tok;
+					if (tok is not TextToken)
+					{
+						s = formatParams[index++] ?? "null";
+
+						if (s is IEnumerable enumerable and not string)
+						{
+							s = enumerable.ArrayToString();
+						}
+					}
+
+					stringBuilder.Append(s);
+				}
+
+				messageFormatted = stringBuilder.ToString();
+			}
+			else
+			{
+				messageFormatted = message;
+			}
+
+			log.Warning("Warning [{AnalyzerName}]: {Type}:{{{MemberLocation}}} {MessageFormatted}", analyzerName, type, memberLocation, messageFormatted);
 			if (parent is not null)
 			{
 				log.Warning("Parent {FriendlyName} {ExtraData}", parent.GetFriendlyName(), parent.ExtraData());

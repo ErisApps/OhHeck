@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using OhHeck.Core.Helpers.Enumerable;
 
@@ -55,15 +56,32 @@ public class SimilarPointData : IFieldAnalyzer {
 					if (prevPoint.Data.AreFloatsSimilar(point.Data, leftMiddleTimeDifference)
 					    && (middleRightTimeDifference is null || point.Data.AreFloatsSimilar(nextPoint!.Data, middleRightTimeDifference.Value)))
 					{
-						var message = $"Point data {s} are too similar relative to the time difference {leftMiddleTimeDifference}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
-						              $"Point2: {point.Data.ArrayToString()}:{point.Time}";
+						var args = new List<object>
+						{
+							s,
+							leftMiddleTimeDifference,
+							prevPoint.Data,
+							prevPoint.Time,
+							point.Data,
+							point.Time
+						};
+						const string message = "Point data {s} are too similar relative to the time difference {leftMiddleTimeDifference}: Point1 {prevPointData}:{prevPointTime} " +
+						              "Point2: {P2}:{P2t}";
+						const string message2 = message + " 2nd time difference: {middleRightTimeDifference} Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
 
 						if (nextPoint is not null)
 						{
-							message += $" 2nd time difference: {middleRightTimeDifference} Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
+							args.Add(middleRightTimeDifference!);
+							args.Add(nextPoint.Data);
+							args.Add(nextPoint.Time);
+							warningOutput.WriteWarning(message2, GetType(), args.ToArray());
+						}
+						else
+						{
+							warningOutput.WriteWarning(message, GetType(), args.ToArray());
 						}
 
-						warningOutput.WriteWarning(message, GetType());
+
 					}
 
 					prevPoint = point;

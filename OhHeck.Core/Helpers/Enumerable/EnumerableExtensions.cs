@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -39,6 +40,17 @@ public static class EnumerableExtensions
 		StringBuilder builder = new("{");
 
 		builder.Append(string.Join(',', enumerable));
+
+		builder.Append('}');
+
+		return builder.ToString();
+	}
+
+	public static string ArrayToString(this IEnumerable enumerable)
+	{
+		StringBuilder builder = new("{");
+
+		builder.Append(string.Join(',', enumerable.Cast<object>().ToArray()));
 
 		builder.Append('}');
 

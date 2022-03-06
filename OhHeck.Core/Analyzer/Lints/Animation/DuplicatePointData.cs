@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using OhHeck.Core.Helpers.Enumerable;
 using OhHeck.Core.Models.ModData.Tracks;
@@ -37,15 +38,23 @@ public class DuplicatePointData : IFieldAnalyzer {
 					// or left, middle and right are identical
 					if (prevPoint.Data.AreArrayElementsIdentical(point.Data) && (nextPoint is null || nextPoint.Data.AreArrayElementsIdentical(point.Data)))
 					{
-						var message = $"Point data {s} are identical: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
-						              $"Point2: {point.Data.ArrayToString()}:{point.Time}";
+						var args = new List<object> { s, prevPoint.Data, prevPoint.Time, point.Data, point.Time };
+						const string message = "Point data {S} are identical: Point1 {P1}:{P1T} " +
+						              "Point2: {P2}:{P2T}";
+						const string nextPointMsg = message + " Point3: {P3}:{P3T}";
 
 						if (nextPoint is not null)
 						{
-							message += $" Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
+							args.Add(nextPoint.Data);
+							args.Add(nextPoint.Time);
+							warningOutput.WriteWarning(nextPointMsg, GetType(), args.ToArray());
+						}
+						else
+						{
+							warningOutput.WriteWarning(message, GetType(), args.ToArray());
 						}
 
-						warningOutput.WriteWarning(message, GetType());
+
 					}
 
 

@@ -94,10 +94,15 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 		});
 
 	private static void WriteWarning(IWarningOutput warningOutput, string s, PointData startPoint, PointData middlePoint, IEnumerable<float> middleSlope, PointData endPoint, IEnumerable<float> endSlope) =>
-		warningOutput.WriteWarning($"Point data {s} slope and y intercept are closely intercepting and match easing/smooth {DIFFERENCE_THRESHOLD} slope ({middleSlope.ArrayToString()}): " +
-		                           $"Point1 {startPoint.Data.ArrayToString()}:{startPoint.Time} " +
-		                           $"Point2: {middlePoint.Data.ArrayToString()}:{middlePoint.Time} " +
-		                           $"Point3: {endPoint.Data.ArrayToString()}:{endPoint.Time}", typeof(SimilarPointDataSlope));
+		warningOutput.WriteWarning("Point data {S} slope and y intercept are closely intercepting and match easing/smooth {DifferenceThreshold} slope ({MiddleSlope}): " +
+		                           "Point1 {P1}:{P1T} " +
+		                           "Point2: {P2}:{P2T} " +
+		                           "Point3: {P3}:{P3T}", typeof(SimilarPointDataSlope),
+			s, DIFFERENCE_THRESHOLD, middleSlope,
+			startPoint.Data, startPoint.Time,
+			middlePoint.Data, middlePoint.Time,
+			endPoint.Data, endPoint.Time
+			);
 
 	/// <summary>
 	///
