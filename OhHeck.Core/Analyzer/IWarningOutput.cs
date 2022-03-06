@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace OhHeck.Core.Analyzer;
 
@@ -9,7 +10,7 @@ public interface IWarningOutput
 	void PushWarningInfo(WarningContext warningContext);
 	void PopWarningInfo();
 
-	void WriteWarning(string message);
+	void WriteWarning(string message, Type analyzeType);
 
 	IEnumerable<Warning> GetWarnings();
 }

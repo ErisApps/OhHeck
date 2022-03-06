@@ -1,4 +1,6 @@
-﻿namespace OhHeck.Core.Analyzer;
+﻿using System;
+
+namespace OhHeck.Core.Analyzer;
 
 public record WarningContext(string Type, string MemberLocation, IAnalyzable? Parent);
-public record Warning(string Message, WarningContext WarningContext);
+public record Warning(string Message, WarningContext WarningContext, Type AnalyzerType);

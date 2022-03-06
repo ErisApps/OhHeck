@@ -91,7 +91,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 		warningOutput.WriteWarning($"Point data {s} slope and y intercept are closely intercepting and match easing/smooth {DIFFERENCE_THRESHOLD}: " +
 		                           $"Point1 {startPoint.Data.ArrayToString()}:{startPoint.Time} " +
 		                           $"Point2: {middlePoint.Data.ArrayToString()}:{middlePoint.Time} slope ({middleSlope.ArrayToString()}) " +
-		                           $"Point3: {endPoint.Data.ArrayToString()}:{endPoint.Time} slope ({endSlope.ArrayToString()})");
+		                           $"Point3: {endPoint.Data.ArrayToString()}:{endPoint.Time} slope ({endSlope.ArrayToString()})", typeof(SimilarPointDataSlope));
 
 	/// <summary>
 	///

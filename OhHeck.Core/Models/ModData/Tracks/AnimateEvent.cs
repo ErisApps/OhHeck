@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using JetBrains.Annotations;
 using OhHeck.Core.Models.Beatmap;
 
 namespace OhHeck.Core.Models.ModData.Tracks;

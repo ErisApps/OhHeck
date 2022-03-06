@@ -16,6 +16,7 @@ public class WarningManager
 	private readonly IContainer _container;
 	private readonly ILogger _logger;
 
+	// ReSharper disable once NotAccessedField.Local
 	private HashSet<string> _suppressedWarnings = new();
 
 	public WarningManager(IContainer container, ILogger logger)

@@ -45,7 +45,7 @@ public class DuplicatePointData : IFieldAnalyzer {
 							message += $" Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
 						}
 
-						warningOutput.WriteWarning(message);
+						warningOutput.WriteWarning(message, GetType());
 					}
 
 

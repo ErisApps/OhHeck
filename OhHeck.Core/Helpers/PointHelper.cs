@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using OhHeck.Core.Helpers.Converters;
-using OhHeck.Core.Models.Beatmap;
 using OhHeck.Core.Models.ModData.Tracks;
 
 namespace OhHeck.Core.Helpers;
@@ -43,7 +42,7 @@ public static class PointHelper
 				}
 				case IEnumerable<object> objects:
 				{
-					var pointDatas = objects.Select(p => new PointData((List<object>) o)).ToList();
+					var pointDatas = objects.Select(p => new PointData((List<object>) p)).ToList();
 					pointDefinitionDatas[name] = new PointDefinitionData(name, pointDatas);
 					break;
 				}

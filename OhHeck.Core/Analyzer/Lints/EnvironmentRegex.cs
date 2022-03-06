@@ -23,7 +23,7 @@ public class EnvironmentRegex : IFieldAnalyzer {
 		{
 			if (!RegexBindings.IsRegexValid(regex, out var message))
 			{
-				outerWarningOutput.WriteWarning($"{regex} is invalid: {message}");
+				outerWarningOutput.WriteWarning($"{regex} is invalid: {message}", GetType());
 			}
 		}
 	}

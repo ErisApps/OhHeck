@@ -3,6 +3,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Models.Beatmap.Enums;
+// we don't care anymore!
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace OhHeck.Core.Models.Beatmap;
 
@@ -65,7 +69,7 @@ public class EventData : IAnalyzable
 	}
 
 	public string GetFriendlyName() => "EventData";
-	public string? ExtraData() => $"Time: {Time} Type {Type}";
+	public string ExtraData() => $"Time: {Time} Type {Type}";
 }
 
 public class NoteData : IAnalyzable
@@ -99,7 +103,7 @@ public class NoteData : IAnalyzable
 	}
 
 	public string GetFriendlyName() => "NoteData";
-	public string? ExtraData() => $"Time: {Time} Type {Type}";
+	public string ExtraData() => $"Time: {Time} Type {Type}";
 }
 
 public class ObstacleData : IAnalyzable
@@ -133,5 +137,5 @@ public class ObstacleData : IAnalyzable
 	}
 
 	public string GetFriendlyName() => "ObstacleData";
-	public string? ExtraData() => $"Time: {Time} Type {Type}";
+	public string ExtraData() => $"Time: {Time} Type {Type}";
 }

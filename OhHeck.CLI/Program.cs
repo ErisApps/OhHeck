@@ -1,16 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using DryIoc;
+using OhHeck.CLI;
 using OhHeck.Core.Analyzer;
-using OhHeck.Core.Analyzer.Implementation;
-using OhHeck.Core.Helpers;
-using OhHeck.Core.Helpers.Converters;
-using OhHeck.Core.Models.Beatmap;
 using Serilog;
 
 // TODO: Optimizations
@@ -46,106 +39,23 @@ var warningManager = container.Resolve<WarningManager>();
 warningManager.Init(GetSuppressedWarnings(args));
 #endregion
 
-void TestMapDefault(string name)
-{
-	TestMap($"./test_maps/{name}.dat");
-}
-
-void TestMap(string name)
-{
-	log.Information($"Testing map {name}");
-	var fileStream = File.OpenRead(name);
-
-	var options = new JsonSerializerOptions
-	{
-		IgnoreReadOnlyProperties = false, IgnoreReadOnlyFields = false,
-		IncludeFields = true,
-		DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-		// mappers grr, to make configurable somehow
-		NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals
-	};
-
-	PointDefinitionReferenceHandler pointDefinitionReferenceHandler = new();
-	options.ReferenceHandler = pointDefinitionReferenceHandler;
-
-	var stopwatch = Stopwatch.StartNew();
-	var beatmapSaveData = JsonSerializer.Deserialize<BeatmapSaveData>(fileStream, options);
-	stopwatch.Stop();
-	pointDefinitionReferenceHandler.Reset();
-
-	log.Information($"Parsed beatmap in {stopwatch.ElapsedMilliseconds}ms");
-
-	if (beatmapSaveData is null)
-	{
-		log.Information("Beatmap is null. Like my love and sanity");
-		return;
-	}
-
-	log.Information($"Version {beatmapSaveData.Version}");
-	log.Information($"Events {beatmapSaveData.Events.Count}");
-	log.Information($"Notes {beatmapSaveData.Notes.Count}");
-	log.Information($"Obstacles {beatmapSaveData.Obstacles.Count}");
-
-	if (beatmapSaveData.BeatmapCustomData is null)
-	{
-		return;
-	}
-
-	var beatmapCustomData = beatmapSaveData.BeatmapCustomData;
-
-	log.Information("Beatmap custom data is not null, noozle!");
-
-	log.Information($"Point defs: {beatmapCustomData.PointDefinitions?.Count ?? -1}");
-	log.Information($"Environment enhancements: {beatmapCustomData.EnvironmentEnhancements?.Count ?? -1}");
-	log.Information($"Custom Events: {beatmapCustomData.CustomEvents?.Count ?? -1}");
-
-	stopwatch = Stopwatch.StartNew();
-	WarningOutput warningOutput = new();
-	warningManager.AnalyzeBeatmap(beatmapSaveData, warningOutput);
-	stopwatch.Stop();
-	log.Information("Took {Time}ms to analyze beatmap", stopwatch.ElapsedMilliseconds);
-
-	var warningCount = 0;
-	foreach (var (message, warningInfo) in warningOutput.GetWarnings())
-	{
-		warningCount++;
-		if (maxWarningCount != -1 && warningCount > maxWarningCount)
-		{
-			break;
-		}
-
-		var (type, memberLocation, parent) = warningInfo;
-		log.Warning($"Warning: {type}:{{{memberLocation}}} {message}");
-		if (parent is not null)
-		{
-			log.Warning($"Parent {parent.GetFriendlyName()} {parent.ExtraData()}");
-		}
-
-		log.Warning("");
-	}
-
-	if (warningCount <= maxWarningCount || maxWarningCount == -1)
-	{
-		return;
-	}
-
-	log.Warning($"Warning count exceeded max warning count {maxWarningCount}");
-	log.Warning($"Remaining {warningOutput.GetWarnings().Count() - warningCount}");
-}
-
 if (args.Any(e => e == "-test"))
 {
 	TestMapDefault("CentipedeEPlus");
-	log.Information(string.Empty);
+	log.Information("");
 	TestMapDefault("SomewhereOutThereEPlus");
 }
 else
 {
-	TestMap(args.First(e => !e.StartsWith("-") && !e.StartsWith("-wc ")));
+	Testing.TestMap(log, args.First(e => !e.StartsWith("-") && !e.StartsWith("-wc ")), warningManager, maxWarningCount);
 }
 
 return 0;
 
+void TestMapDefault(string name)
+{
+	Testing.TestMap(log, $"./test_maps/{name}.dat", warningManager, maxWarningCount);
+}
 
 HashSet<string> GetSuppressedWarnings(IEnumerable<string> args)
 {

@@ -63,7 +63,7 @@ public class SimilarPointData : IFieldAnalyzer {
 							message += $" 2nd time difference: {middleRightTimeDifference} Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
 						}
 
-						warningOutput.WriteWarning(message);
+						warningOutput.WriteWarning(message, GetType());
 					}
 
 					prevPoint = point;
