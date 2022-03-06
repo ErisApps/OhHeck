@@ -33,11 +33,12 @@ public static class EnumerableExtensions
 		return true;
 	}
 
+	// TODO: Not fast enough
 	public static string ArrayToString<T>(this IEnumerable<T?> enumerable)
 	{
 		StringBuilder builder = new("{");
 
-		builder.Append(string.Join(',', enumerable.Select(x => x?.ToString() ?? "null")));
+		builder.Append(string.Join(',', enumerable));
 
 		builder.Append('}');
 
