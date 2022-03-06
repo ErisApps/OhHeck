@@ -45,7 +45,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 					var middlePoint = pointDatas[i];
 
 
-					if (ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endSlope))
+					if (ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
 					{
 						WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint, endSlope);
 						continue;
