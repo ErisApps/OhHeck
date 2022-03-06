@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using OhHeck.Core.Helpers.Enumerable;
 using OhHeck.Core.Models.ModData.Tracks;
@@ -33,13 +32,20 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 
 				// compare 3 points consecutively
 				var prevPoint = pointDatas.First(); // if empty, we have a problem
+
+				// Reduce allocations by reusing the same array
+				var middleSlope = new float[prevPoint.Data.Length];
+				var endSlope = new float[prevPoint.Data.Length];
+				var middleYIntercepts = new float[prevPoint.Data.Length];
+				var endYIntercepts = new float[prevPoint.Data.Length];
+
 				for (var i = 1; i < pointDatas.Count - 1; i++)
 				{
 					var endPoint = pointDatas[i + 1];
 					var middlePoint = pointDatas[i];
 
 
-					if (ComparePoints(prevPoint, middlePoint, endPoint, out var middleSlope, out var endSlope))
+					if (ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endSlope))
 					{
 						WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint, endSlope);
 						continue;
@@ -76,7 +82,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 								continue;
 							}
 
-							if (ComparePoints(startPoint, middlePoint2, endPoint, out middleSlope, out endSlope))
+							if (ComparePoints(startPoint, middlePoint2, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
 							{
 								WriteWarning(warningOutput, s, startPoint, middlePoint2, middleSlope, endPoint, endSlope);
 							}
@@ -88,10 +94,10 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 		});
 
 	private static void WriteWarning(IWarningOutput warningOutput, string s, PointData startPoint, PointData middlePoint, IEnumerable<float> middleSlope, PointData endPoint, IEnumerable<float> endSlope) =>
-		warningOutput.WriteWarning($"Point data {s} slope and y intercept are closely intercepting and match easing/smooth {DIFFERENCE_THRESHOLD}: " +
+		warningOutput.WriteWarning($"Point data {s} slope and y intercept are closely intercepting and match easing/smooth {DIFFERENCE_THRESHOLD} slope ({middleSlope.ArrayToString()}): " +
 		                           $"Point1 {startPoint.Data.ArrayToString()}:{startPoint.Time} " +
-		                           $"Point2: {middlePoint.Data.ArrayToString()}:{middlePoint.Time} slope ({middleSlope.ArrayToString()}) " +
-		                           $"Point3: {endPoint.Data.ArrayToString()}:{endPoint.Time} slope ({endSlope.ArrayToString()})", typeof(SimilarPointDataSlope));
+		                           $"Point2: {middlePoint.Data.ArrayToString()}:{middlePoint.Time} " +
+		                           $"Point3: {endPoint.Data.ArrayToString()}:{endPoint.Time}", typeof(SimilarPointDataSlope));
 
 	/// <summary>
 	///
@@ -101,12 +107,11 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 	/// <param name="endPoint"></param>
 	/// <param name="middleSlope"></param>
 	/// <param name="endSlope"></param>
+	/// <param name="middleYIntercepts"></param>
+	/// <param name="endYIntercepts"></param>
 	/// <returns>true if similar</returns>
-	private static bool ComparePoints(PointData startPoint, PointData middlePoint, PointData endPoint, [NotNullWhen(true)] out float[]? middleSlope, [NotNullWhen(true)] out float[]? endSlope)
+	private static bool ComparePoints(PointData startPoint, PointData middlePoint, PointData endPoint, in float[] middleSlope, in float[] endSlope, in float[] middleYIntercepts, in float[] endYIntercepts)
 	{
-		middleSlope = null;
-		endSlope = null;
-
 		// Skip points where their easing or smoothness is different,
 		// which would allow for middlePoint to cause a non-negligible difference
 		if (endPoint.Easing != middlePoint.Easing || endPoint.Smooth != middlePoint.Smooth)
@@ -121,11 +126,11 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 			return false;
 		}
 
-		endSlope = SlopeOfPoint(startPoint, endPoint);
-		middleSlope = SlopeOfPoint(startPoint, middlePoint);
+		SlopeOfPoint(startPoint, endPoint, endSlope);
+		SlopeOfPoint(startPoint, middlePoint, middleSlope);
 
-		var middleYIntercepts = GetYIntercept(middlePoint, middleSlope);
-		var endYIntercepts = GetYIntercept(endPoint, endSlope);
+		GetYIntercept(middlePoint, middleSlope, middleYIntercepts);
+		GetYIntercept(endPoint, endSlope, endYIntercepts);
 
 
 
@@ -152,9 +157,8 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 
 	}
 
-	private static float[] GetYIntercept(PointData pointData, IReadOnlyList<float> slopeArray)
+	private static void GetYIntercept(PointData pointData, IReadOnlyList<float> slopeArray, IList<float> yIntercepts)
 	{
-		var yIntercepts = new float[slopeArray.Count];
 		for (var i = 0; i < slopeArray.Count; i++)
 		{
 			var slope = slopeArray[i];
@@ -167,15 +171,11 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 			var yIntercept = y - (slope * x);
 			yIntercepts[i] = yIntercept;
 		}
-
-		return yIntercepts;
 	}
 
-	private static float[] SlopeOfPoint(PointData a, PointData b)
+	private static void SlopeOfPoint(PointData a, PointData b, IList<float> slopes)
 	{
-
 		var yDiff = b.Time - a.Time;
-		var slopes = new float[b.Data.Length];
 
 		for (var i = 0; i < b.Data.Length; i++)
 		{
@@ -189,7 +189,5 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 				slopes[i] = yDiff / xDiff;
 			}
 		}
-
-		return slopes;
 	}
 }
