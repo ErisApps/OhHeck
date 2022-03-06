@@ -7,6 +7,10 @@ namespace OhHeck.Core.Analyzer.Lints.Animation;
 [BeatmapWarning("similar-point-data")]
 public class SimilarPointData : IFieldAnalyzer {
 
+	// The minimum difference for considering not similar
+	private const float DIFFERENCE_THRESHOLD = 1f; // TODO: Configurable
+	private const float TIME_DIFFERENCE_THRESHOLD = 0.03f; // TODO: Configurable
+
 	// I've got no idea if this is a reliable algorithm
 	// Compares two points and attempts to make a rough estimate of whether they're similar/redundant
 	// based on their keyframe difference and time difference
@@ -36,7 +40,6 @@ public class SimilarPointData : IFieldAnalyzer {
 					}
 
 					var leftMiddleTimeDifference = MathF.Abs(point.Time - prevPoint.Time);
-					var middleRightTimeDifference = nextPoint is not null ? MathF.Abs(point.Time - nextPoint.Time) : (float?) null;
 
 					// example point data
 					// "_name":"colorWave","_points":[
@@ -52,15 +55,21 @@ public class SimilarPointData : IFieldAnalyzer {
 					// ]}
 
 					// Both points are identical
-					if (prevPoint.Data.AreFloatsSimilar(point.Data, leftMiddleTimeDifference)
-					    && (middleRightTimeDifference is null || point.Data.AreFloatsSimilar(nextPoint!.Data, middleRightTimeDifference.Value)))
+					if (prevPoint.Data.AreFloatsSimilar(point.Data, DIFFERENCE_THRESHOLD)
+					    &&
+						    // time difference is small
+						    leftMiddleTimeDifference <= TIME_DIFFERENCE_THRESHOLD
+					    // if no point after this
+					    // or if the next point datas are similar to the middle, which makes the middle redundant
+					    && (nextPoint is null || nextPoint.Data.AreFloatsSimilar(point.Data, DIFFERENCE_THRESHOLD))
+					   )
 					{
-						var message = $"Point data {s} are too similar relative to the time difference {leftMiddleTimeDifference}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
+						var message = $"Point data {s} are too similar relative to the time difference {DIFFERENCE_THRESHOLD}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
 						              $"Point2: {point.Data.ArrayToString()}:{point.Time}";
 
 						if (nextPoint is not null)
 						{
-							message += $" 2nd time difference: {middleRightTimeDifference} Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
+							message += $" Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
 						}
 
 						warningOutput.WriteWarning(message, GetType());

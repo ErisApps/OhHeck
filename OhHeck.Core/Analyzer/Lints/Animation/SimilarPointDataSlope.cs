@@ -10,6 +10,7 @@ namespace OhHeck.Core.Analyzer.Lints.Animation;
 public class SimilarPointDataSlope : IFieldAnalyzer
 {
 
+	// The minimum difference for considering not similar
 	// These numbers at quick glance seem to be fairly reliable, nice
 	// however they should be configurable or looked at later
 	private const float DIFFERENCE_THRESHOLD = 0.003f; // TODO: Configurable
@@ -119,7 +120,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 			return false;
 		}
 
-		// Skip points that are identical
+		// Skip points that are identical with large time differences
 		// used for keyframe pause
 		if (Math.Abs(endPoint.Time - middlePoint.Time) > DIFFERENCE_THRESHOLD && endPoint.Data.AreFloatsSimilar(middlePoint.Data, DIFFERENCE_THRESHOLD))
 		{
