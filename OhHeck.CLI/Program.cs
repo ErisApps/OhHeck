@@ -13,6 +13,9 @@ using Serilog;
 // round point datas and yeet unnecessary
 // make fern's life less painful
 
+
+// I wish I wrote this in rust, but hey C# means I get cool dependency injection and runtime magic!
+// Centipede will not load in less than 5 minutes with similar-point-data-slope wtf
 #region Startup
 // if -1, infinite warnings
 var maxWarningCount = GetWarningCount(args) ?? 20;
