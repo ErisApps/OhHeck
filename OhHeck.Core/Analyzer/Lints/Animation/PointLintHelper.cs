@@ -8,7 +8,8 @@ namespace OhHeck.Core.Analyzer.Lints.Animation;
 
 public static class PointLintHelper
 {
-	public static void AnalyzePoints(object? value, IWarningOutput warningOutput, Action<Dictionary<string, List<PointData>>> analyzeFn)
+	// we love reusing code and lambdas
+	public static void AnalyzePoints(object? value, IWarningOutput warningOutput, Action<Dictionary<string, List<PointData>>, IWarningOutput> analyzeFn)
 	{
 		if (value is List<BeatmapCustomEvent> customEvents)
 		{
@@ -22,8 +23,9 @@ public static class PointLintHelper
 				var friendlyName = beatmapCustomEvent.GetFriendlyName();
 
 
-				warningOutput.PushWarningInfo(new WarningInfo(friendlyName, warningOutput.GetCurrentWarningInfo().MemberLocation, warningOutput.GetCurrentWarningInfo().Parent));
-				analyzeFn(PointHelper.GetPointDataDictionary(animateEvent.PointProperties)!);
+				warningOutput.PushWarningInfo(new WarningContext(friendlyName, warningOutput.GetCurrentWarningInfo().MemberLocation, warningOutput.GetCurrentWarningInfo().Parent));
+				// pass in warningOutput to avoid allocation moment
+				analyzeFn(PointHelper.GetPointDataDictionary(animateEvent.PointProperties)!, warningOutput);
 				warningOutput.PopWarningInfo();
 			}
 		}
@@ -35,6 +37,6 @@ public static class PointLintHelper
 			return;
 		}
 
-		analyzeFn(pointDataDictionary);
+		analyzeFn(pointDataDictionary, warningOutput);
 	}
 }

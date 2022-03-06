@@ -7,9 +7,9 @@ using OhHeck.Core.Models.ModData.Chroma;
 namespace OhHeck.Core.Analyzer.Lints;
 
 [BeatmapWarning("environment-regex")]
-public class EnvironmentRegex : IBeatmapAnalyzer {
+public class EnvironmentRegex : IFieldAnalyzer {
 
-	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput)
+	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput)
 	{
 		if (value is not List<EnvironmentEnhancement> environmentEnhancements)
 		{
@@ -23,7 +23,7 @@ public class EnvironmentRegex : IBeatmapAnalyzer {
 		{
 			if (!RegexBindings.IsRegexValid(regex, out var message))
 			{
-				warningOutput.WriteWarning($"{regex} is invalid: {message}");
+				outerWarningOutput.WriteWarning($"{regex} is invalid: {message}");
 			}
 		}
 	}

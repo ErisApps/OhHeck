@@ -6,9 +6,9 @@ using OhHeck.Core.Models.ModData.Chroma;
 namespace OhHeck.Core.Analyzer.Lints;
 
 [BeatmapWarning("ends-with-regex-lookup")]
-public class EndsWithRegexLookup : IBeatmapAnalyzer
+public class EndsWithRegexLookup : IFieldAnalyzer
 {
-	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput)
+	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput)
 	{
 		if (value is not List<EnvironmentEnhancement> environmentEnhancements)
 		{
@@ -21,7 +21,7 @@ public class EndsWithRegexLookup : IBeatmapAnalyzer
 		         select environmentEnhancement.Id into regex
 		         where regex.EndsWith("$") select regex)
 		{
-			warningOutput.WriteWarning($"Using $ at the end of a regex lookup. Consider using EndsWith lookup instead. Regex: {regex}");
+			outerWarningOutput.WriteWarning($"Using $ at the end of a regex lookup. Consider using EndsWith lookup instead. Regex: {regex}");
 		}
 	}
 }

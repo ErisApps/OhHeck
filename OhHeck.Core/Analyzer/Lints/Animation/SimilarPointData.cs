@@ -1,35 +1,42 @@
 ﻿using System;
 using System.Linq;
-using OhHeck.Core.Helpers;
 using OhHeck.Core.Helpers.Enumerable;
 
 namespace OhHeck.Core.Analyzer.Lints.Animation;
 
 [BeatmapWarning("similar-point-data")]
-public class SimilarPointData : IBeatmapAnalyzer {
+public class SimilarPointData : IFieldAnalyzer {
 
 	// I've got no idea if this is a reliable algorithm
 	// Compares two points and attempts to make a rough estimate of whether they're similar/redundant
 	// based on their keyframe difference and time difference
-	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput) =>
-		PointLintHelper.AnalyzePoints(value,  warningOutput, pointDataDictionary =>
+	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput) =>
+		PointLintHelper.AnalyzePoints(value,  outerWarningOutput, (pointDataDictionary, warningOutput) =>
 		{
 
 			foreach (var (s, pointDatas) in pointDataDictionary)
 			{
+				// redundant point checking
+				if (pointDatas.Count <= 1)
+				{
+					continue;
+				}
+
 				var prevPoint = pointDatas.First(); // if empty, we have a problem
 				for (var i = 1; i < pointDatas.Count; i++)
 				{
 					var point = pointDatas[i];
+					var nextPoint = i + 1 < pointDatas.Count ? pointDatas[i + 1] : null;
 
 					// ignore points who have different easing or smoothness since those can
 					// be considered not similar even with small time differences
-					if (point.Smooth != prevPoint.Smooth || point.Easing != prevPoint.Easing)
+					if (point.Smooth != prevPoint.Smooth || point.Easing != prevPoint.Easing || (nextPoint is not null && (nextPoint.Smooth != point.Smooth || nextPoint.Easing != point.Easing)))
 					{
 						continue;
 					}
 
-					var timeDifference = MathF.Abs(point.Time - prevPoint.Time);
+					var leftMiddleTimeDifference = MathF.Abs(point.Time - prevPoint.Time);
+					var middleRightTimeDifference = nextPoint is not null ? MathF.Abs(point.Time - nextPoint.Time) : (float?) null;
 
 					// example point data
 					// "_name":"colorWave","_points":[
@@ -45,10 +52,18 @@ public class SimilarPointData : IBeatmapAnalyzer {
 					// ]}
 
 					// Both points are identical
-					if (prevPoint.Data.AreFloatsSimilar(point.Data, timeDifference))
+					if (prevPoint.Data.AreFloatsSimilar(point.Data, leftMiddleTimeDifference)
+					    && (middleRightTimeDifference is null || point.Data.AreFloatsSimilar(nextPoint!.Data, middleRightTimeDifference.Value)))
 					{
-						warningOutput.WriteWarning(
-							$"Point data {s} are too similar relative to the time difference {timeDifference}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} Point2: {point.Data.ArrayToString()}:{point.Time}");
+						var message = $"Point data {s} are too similar relative to the time difference {leftMiddleTimeDifference}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
+						              $"Point2: {point.Data.ArrayToString()}:{point.Time}";
+
+						if (nextPoint is not null)
+						{
+							message += $" 2nd time difference: {middleRightTimeDifference} Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
+						}
+
+						warningOutput.WriteWarning(message);
 					}
 
 					prevPoint = point;

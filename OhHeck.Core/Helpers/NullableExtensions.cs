@@ -2,15 +2,6 @@
 
 public static class NullableExtensions
 {
-	public static bool NullabilityEqual<T>(this T? x, T? y)
-	{
-		if (x is not null)
-		{
-			// true if both x and y are not null
-			return y is not null;
-		}
-
-		// true if both x and y are null
-		return y is null;
-	}
+	// returns true if x and y are both null or both not null
+	public static bool NullabilityEqual<T>(this T? x, T? y) => x is null == y is null;
 }

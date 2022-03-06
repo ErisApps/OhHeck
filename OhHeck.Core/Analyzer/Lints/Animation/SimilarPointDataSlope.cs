@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using OhHeck.Core.Helpers;
 using OhHeck.Core.Helpers.Enumerable;
 using OhHeck.Core.Models.ModData.Tracks;
 
 namespace OhHeck.Core.Analyzer.Lints.Animation;
 
 [BeatmapWarning("similar-point-data-slope")]
-public class SimilarPointDataSlope : IBeatmapAnalyzer
+public class SimilarPointDataSlope : IFieldAnalyzer
 {
 
 	// These numbers at quick glance seem to be fairly reliable, nice
@@ -20,13 +19,17 @@ public class SimilarPointDataSlope : IBeatmapAnalyzer
 
 	// Compares points a, b and c where b is between a and c.
 	// If a-b's slope is similar to a-c, it deems it unnecessary
-	public void Validate(Type fieldType, object? value, IWarningOutput warningOutput) =>
-		PointLintHelper.AnalyzePoints(value, warningOutput, pointDataDictionary =>
+	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput) =>
+		PointLintHelper.AnalyzePoints(value, outerWarningOutput, (pointDataDictionary, warningOutput) =>
 		{
 
 			foreach (var (s, pointDatas) in pointDataDictionary)
 			{
-
+				// we need at minimum 3 points to check
+				if (pointDatas.Count <= 2)
+				{
+					continue;
+				}
 
 				// compare 3 points consecutively
 				var prevPoint = pointDatas.First(); // if empty, we have a problem
@@ -43,6 +46,7 @@ public class SimilarPointDataSlope : IBeatmapAnalyzer
 					}
 
 
+					var oldPrevPoint = prevPoint;
 					prevPoint = middlePoint;
 
 #pragma warning disable CS0162
@@ -51,17 +55,30 @@ public class SimilarPointDataSlope : IBeatmapAnalyzer
 						continue;
 					}
 
+					// We don't need to recheck points when we're only checking the first 3
+					if (i < 4)
+					{
+						continue;
+					}
+
+					// Check every point before end
 					for (var j = 0; j < i - 2; j++)
 					{
 						// compare every point between start and end
 						for (var k = j + 1; k < i - 1; k++)
 						{
 							var startPoint = pointDatas[k];
-							middlePoint = pointDatas[j];
+							var middlePoint2 = pointDatas[j];
 
-							if (ComparePoints(startPoint, middlePoint, endPoint, out middleSlope, out endSlope))
+							// Skip these points, we just checked them
+							if (oldPrevPoint == startPoint && middlePoint2 == middlePoint || middlePoint2 == startPoint)
 							{
-								WriteWarning(warningOutput, s, startPoint, middlePoint, middleSlope, endPoint, endSlope);
+								continue;
+							}
+
+							if (ComparePoints(startPoint, middlePoint2, endPoint, out middleSlope, out endSlope))
+							{
+								WriteWarning(warningOutput, s, startPoint, middlePoint2, middleSlope, endPoint, endSlope);
 							}
 						}
 					}

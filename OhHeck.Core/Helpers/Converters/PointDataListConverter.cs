@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -9,6 +8,7 @@ using OhHeck.Core.Models.ModData.Tracks;
 
 namespace OhHeck.Core.Helpers.Converters;
 
+// Parses a List of PointData such as is in PointDefinitionData
 public class PointDataListConverter : JsonConverter<List<PointData>>
 {
 	private static PointData ParsePointData(ref Utf8JsonReader reader, bool single)

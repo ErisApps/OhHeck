@@ -6,6 +6,8 @@ using OhHeck.Core.Models.ModData.Tracks;
 
 namespace OhHeck.Core.Helpers.Converters;
 
+// Parses a dictionary of property -> PointDefinitionData
+// for example being "_position": "somePointDefinition" or "_rotation": [5, 2, 3]
 public class DictionaryPointDefinitionConverter : JsonConverter<Dictionary<string, PointDefinitionData>>
 {
 	public override Dictionary<string, PointDefinitionData> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

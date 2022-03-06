@@ -11,13 +11,16 @@ namespace OhHeck.Core.Models.Beatmap;
 
 public class BeatmapCustomData : IAnalyzable
 {
+	// Chroma
 	[JsonPropertyName("_environment")]
 	public List<EnvironmentEnhancement>? EnvironmentEnhancements { get; }
 
+	// Tracks
 	[JsonConverter(typeof(BeatmapCustomEventListConverter))]
 	[JsonPropertyName("_customEvents")]
 	public List<BeatmapCustomEvent>? CustomEvents { get; }
 
+	// Tracks
 	[JsonConverter(typeof(BeatmapPointDefinitionConverter))]
 	[JsonPropertyName("_pointDefinitions")]
 	public List<PointDefinitionData>? PointDefinitions { get; }

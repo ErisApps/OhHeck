@@ -50,12 +50,12 @@ public class EventData : IAnalyzable
 	public int Value { get; }
 
 	[JsonPropertyName("_floatValue")]
-	public float FloatValue { get; set; }
+	public float? FloatValue { get; set; }
 
 	[JsonPropertyName("_customData")]
 	public EventCustomData? EventCustomData { get; set; }
 
-	public EventData(float time, BeatmapEventType type, int value, float floatValue, EventCustomData eventCustomData)
+	public EventData(float time, BeatmapEventType type, int value, float? floatValue, EventCustomData eventCustomData)
 	{
 		Time = time;
 		Type = type;

@@ -6,6 +6,7 @@ using OhHeck.Core.Models.ModData.Tracks;
 
 namespace OhHeck.Core.Helpers.Converters;
 
+// Parses BeatmapCustomData's _pointDefinitions
 public class BeatmapPointDefinitionConverter : JsonConverter<List<PointDefinitionData>>
 {
 	public override List<PointDefinitionData> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

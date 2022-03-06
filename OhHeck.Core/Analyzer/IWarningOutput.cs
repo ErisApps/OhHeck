@@ -4,9 +4,9 @@ namespace OhHeck.Core.Analyzer;
 
 public interface IWarningOutput
 {
-	WarningInfo GetCurrentWarningInfo();
+	WarningContext GetCurrentWarningInfo();
 
-	void PushWarningInfo(WarningInfo warningInfo);
+	void PushWarningInfo(WarningContext warningContext);
 	void PopWarningInfo();
 
 	void WriteWarning(string message);

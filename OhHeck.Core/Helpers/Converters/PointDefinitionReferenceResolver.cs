@@ -5,6 +5,9 @@ using OhHeck.Core.Models.ModData.Tracks;
 
 namespace OhHeck.Core.Helpers.Converters;
 
+// Keeps track of point definitions with names
+// such as when stored in BeatmapCustomData
+
 public class PointDefinitionReferenceResolver : ReferenceResolver
 {
 	private readonly Dictionary<string, PointDefinitionData> _pointDefinitionDatas = new();

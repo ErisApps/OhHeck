@@ -4,13 +4,13 @@ namespace OhHeck.Core.Analyzer.Implementation;
 
 public class WarningOutput : IWarningOutput
 {
-	private readonly Stack<WarningInfo> _analyzables = new();
+	private readonly Stack<WarningContext> _analyzables = new();
 	private readonly List<Warning> _warningOutput = new();
 
 
-	public WarningInfo GetCurrentWarningInfo() => _analyzables.Peek();
+	public WarningContext GetCurrentWarningInfo() => _analyzables.Peek();
 
-	public void PushWarningInfo(WarningInfo warningInfo) => _analyzables.Push(warningInfo);
+	public void PushWarningInfo(WarningContext warningContext) => _analyzables.Push(warningContext);
 
 	public void PopWarningInfo() => _analyzables.Pop();
 

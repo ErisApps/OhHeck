@@ -9,9 +9,9 @@ namespace OhHeck.Core.Analyzer;
 
 public class WarningManager
 {
-	private readonly Dictionary<string, IBeatmapAnalyzer> _beatmapAnalyzers = new();
-	private static readonly Type IBeatmapAnalyzerType = typeof(IBeatmapAnalyzer);
-	private static readonly Type IAnalyzableType = typeof(IAnalyzable);
+	private readonly Dictionary<string, IFieldAnalyzer> _beatmapAnalyzers = new();
+	private static readonly Type BeatmapAnalyzerType = typeof(IFieldAnalyzer);
+	private static readonly Type AnalyzableType = typeof(IAnalyzable);
 
 	private readonly IContainer _container;
 	private readonly ILogger _logger;
@@ -41,14 +41,14 @@ public class WarningManager
 				throw new InvalidOperationException($"Beatmap analyzer {warningAttribute} already exists tied to {existingWarning.GetType()}");
 			}
 
-			if (!IBeatmapAnalyzerType.IsAssignableFrom(type))
+			if (!BeatmapAnalyzerType.IsAssignableFrom(type))
 			{
-				throw new InvalidOperationException($"{type} must inherit {nameof(IBeatmapAnalyzer)}");
+				throw new InvalidOperationException($"{type} must inherit {nameof(IFieldAnalyzer)}");
 			}
 
-			_logger.Debug($"Class {type} has warning attribute");
+			_logger.Debug("Class {Type} has warning attribute", type);
 
-			var instance = (IBeatmapAnalyzer) _container.New(type);
+			var instance = (IFieldAnalyzer) _container.New(type);
 			_beatmapAnalyzers[warningAttribute.Name] = instance;
 		}
 	}
@@ -74,12 +74,12 @@ public class WarningManager
 		// Now to recursively analyze
 		foreach (var (_, (memberValue, memberType, friendlyMemberName)) in memberInfos)
 		{
-			if (!IAnalyzableType.IsAssignableFrom(memberType))
+			if (!AnalyzableType.IsAssignableFrom(memberType))
 			{
 				continue;
 			}
 
-			warningOutput.PushWarningInfo(new WarningInfo(Type: friendlyName, MemberLocation: friendlyMemberName, Parent: parent));
+			warningOutput.PushWarningInfo(new WarningContext(Type: friendlyName, MemberLocation: friendlyMemberName, Parent: parent));
 			var fieldValue = (IAnalyzable?) memberValue;
 			Analyze(fieldValue, analyzable, memberType, warningOutput);
 			warningOutput.PopWarningInfo();
@@ -90,6 +90,7 @@ public class WarningManager
 	{
 		var memberInfos = ReflectionUtils.GetTypeFieldsSuperRecursive(type);
 
+		// Member object value, MemberType, friendlyMemberName
 		Dictionary<MemberInfo, (object?, Type, string)> memberValues = new();
 
 
@@ -99,7 +100,7 @@ public class WarningManager
 			var analyzeMemberAttribute = memberInfo.GetCustomAttribute<AnalyzeMemberAttribute>();
 			var friendlyMemberName = analyzeMemberAttribute?.Name ?? memberInfo.Name;
 
-			object? memberValue = null;
+			// get member type
 			var memberType = memberInfo switch
 			{
 				PropertyInfo propertyInfo => propertyInfo.PropertyType,
@@ -107,6 +108,8 @@ public class WarningManager
 				_ => null
 			};
 
+			//get member value
+			object? memberValue = null;
 			if (analyzable is not null)
 			{
 				memberValue = memberInfo switch
@@ -119,7 +122,7 @@ public class WarningManager
 
 			memberValues[memberInfo] = (memberValue, memberType!, friendlyMemberName);
 
-			warningOutput.PushWarningInfo(new WarningInfo(Type: friendlyName, MemberLocation: friendlyMemberName, Parent: parent));
+			warningOutput.PushWarningInfo(new WarningContext(Type: friendlyName, MemberLocation: friendlyMemberName, Parent: parent));
 			foreach (var (_, wAnalyzer) in _beatmapAnalyzers)
 			{
 				wAnalyzer.Validate(memberType!, memberValue, warningOutput);

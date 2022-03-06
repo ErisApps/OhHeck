@@ -13,6 +13,7 @@ public static class WarningManagerExtensions
 	{
 		warningManager.Analyze(beatmapSaveData, warningOutput);
 
+		// We have to iterate the list of types
 		beatmapSaveData.Events.ForEach(x => warningManager.Analyze(x, warningOutput));
 		beatmapSaveData.Notes.ForEach(x => warningManager.Analyze(x, warningOutput));
 		beatmapSaveData.Obstacles.ForEach(x => warningManager.Analyze(x, warningOutput));
