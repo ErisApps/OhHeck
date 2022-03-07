@@ -8,9 +8,9 @@ namespace OhHeck.Core.Helpers;
 
 internal static class ReflectionUtils
 {
-	internal static List<MemberInfo> GetTypeFieldsSuperRecursive(IReflect type, List<MemberInfo>? memberInfos = null)
+	internal static IEnumerable<MemberInfo> GetTypeFieldsSuperRecursive(IReflect type)
 	{
-		memberInfos ??= new List<MemberInfo>();
+		var memberInfos = new List<MemberInfo>();
 
 		while (true)
 		{
@@ -25,11 +25,13 @@ internal static class ReflectionUtils
 			// done
 			if (parentType is null || !parentType.IsAssignableTo<IAnalyzable>())
 			{
-				return memberInfos;
+				break;
 			}
 
 			type = parentType;
 		}
+
+		return memberInfos;
 	}
 
 	// Parses any type including string as T
