@@ -18,6 +18,9 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 	[WarningConfigProperty("difference_threshold")]
 	private float _differenceThreshold = 0.003f;
 
+	[WarningConfigProperty("time_difference_threshold")]
+	private float _timeDifferenceThreshold = 0.025f;
+
 	[WarningConfigProperty("y_intercept_difference_threshold")]
 	private float _yInterceptDifferenceThreshold = 0.5f;
 
@@ -52,6 +55,11 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 					var endPoint = pointDatas[i + 1];
 					var middlePoint = pointDatas[i];
 
+					// skip these points because time difference is too small
+					if (MathF.Abs(prevPoint.Time - endPoint.Time) <= _timeDifferenceThreshold)
+					{
+						continue;
+					}
 
 					if (ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
 					{
