@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Analyzer.Implementation;
@@ -14,8 +15,9 @@ namespace OhHeck.CLI;
 
 public static class Testing
 {
+	private const int MAXIMUM_THREAD = 8;
 
-	private static void Validate(IEnumerable<AnalyzeProcessedData> analyzeProcessedDatas, WarningManager warningManager, IWarningOutput warningOutput)
+	private static void Validate(Span<AnalyzeProcessedData> analyzeProcessedDatas, WarningManager warningManager, IWarningOutput warningOutput)
 	{
 		foreach (var analyzeProcessedData in analyzeProcessedDatas)
 		{
@@ -23,7 +25,45 @@ public static class Testing
 		}
 	}
 
-	public static void TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
+
+	private static async Task ParallelValidate(IEnumerable<AnalyzeProcessedData> analyzeProcessedDatas, WarningManager warningManager, IWarningOutput warningOutput)
+	{
+		var processedDatas = analyzeProcessedDatas.ToArray();
+		if (processedDatas.Length == 0)
+		{
+			return;
+		}
+
+		var elementLimitPerThread = Math.Min(processedDatas.Length, processedDatas.Length / MAXIMUM_THREAD);
+
+		// single threaded
+		if (elementLimitPerThread == processedDatas.Length)
+		{
+			Validate(processedDatas, warningManager, warningOutput);
+		}
+		else
+		{
+			var tasks = new List<Task>(MAXIMUM_THREAD);
+
+			for (var i = 0; i < MAXIMUM_THREAD; i++)
+			{
+				var start = elementLimitPerThread * (i);
+				var end = Math.Max(elementLimitPerThread * (i + 1), processedDatas.Length - 1);
+
+				tasks.Add(Task.Run(() => Validate(new Span<AnalyzeProcessedData>(processedDatas, start, end), warningManager, warningOutput)));
+
+				// no more threads can be assigned work
+				if (end == processedDatas.Length - 1)
+				{
+					break;
+				}
+			}
+
+			await Task.WhenAll(tasks);
+		}
+	}
+
+	public static async Task TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
 	{
 		log.Information("Testing map {Name}", name);
 		var fileStream = File.OpenRead(name);
@@ -63,7 +103,7 @@ public static class Testing
 		log.Information("Took {Time}ms to analyze beatmap", stopwatch.ElapsedMilliseconds);
 		stopwatch.Restart();
 
-		Validate(analyzeProcessedDatas, warningManager, warningOutput);
+		await ParallelValidate(analyzeProcessedDatas, warningManager, warningOutput);
 		stopwatch.Stop();
 		log.Information("Took {Time}ms to validate beatmap", stopwatch.ElapsedMilliseconds);
 
