@@ -1,4 +1,5 @@
 ﻿using System;
+using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Models.Structs;
 
 namespace OhHeck.Core.Analyzer.Lints.SmellyJson;

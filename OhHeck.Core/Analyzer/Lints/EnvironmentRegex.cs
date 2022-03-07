@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Helpers;
 using OhHeck.Core.Models.ModData.Chroma;
 

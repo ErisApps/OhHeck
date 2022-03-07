@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using DryIoc;
+using OhHeck.Core.Analyzer.Attributes;
+using OhHeck.Core.Analyzer.Implementation;
 using OhHeck.Core.Helpers;
 using Serilog;
 
@@ -25,14 +28,28 @@ public class WarningManager
 		_logger = logger;
 	}
 
-	public void Init(HashSet<string> suppressedWarnings)
+	public void Init(IEnumerable<string> suppressedWarnings, IEnumerable<ConfigureWarningValue> configureWarningValues)
 	{
-		_suppressedWarnings = suppressedWarnings;
+		Dictionary<string, List<ConfigureWarningValue>> warningValuesDictionary = new();
+		var warningValues = configureWarningValues.ToList();
+
+		foreach (var configureWarningValue in warningValues)
+		{
+			if (!warningValuesDictionary.TryGetValue(configureWarningValue.WarningName, out var list))
+			{
+				warningValuesDictionary[configureWarningValue.WarningName] = list = new List<ConfigureWarningValue>();
+			}
+
+			list.Add(configureWarningValue);
+		}
+
+
+		_suppressedWarnings = new HashSet<string>(suppressedWarnings);
 		foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
 		{
 			var warningAttribute = type.GetCustomAttribute<BeatmapWarningAttribute>();
 
-			if (warningAttribute is null || suppressedWarnings.Contains(warningAttribute.Name))
+			if (warningAttribute is null || _suppressedWarnings.Contains(warningAttribute.Name))
 			{
 				continue;
 			}
@@ -50,7 +67,28 @@ public class WarningManager
 			_logger.Debug("Class {Type} has warning attribute", type);
 
 			var instance = (IFieldAnalyzer) _container.New(type);
+			InjectWarningConfigValues(instance, type, warningValues);
 			_beatmapAnalyzers[warningAttribute.Name] = instance;
+		}
+	}
+
+	private void InjectWarningConfigValues(IFieldAnalyzer fieldAnalyzer, IReflect type, IEnumerable<ConfigureWarningValue> configureWarningValues)
+	{
+		// I hate this
+		// TODO: Support properties
+		// TODO: Support constructor
+		var fieldTypes = type.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic).ToDictionary(f => f.GetCustomAttribute<WarningConfigPropertyAttribute>()?.ContractName ?? string.Empty, f => f);
+
+		foreach (var warningValue in configureWarningValues)
+		{
+			if (!fieldTypes.TryGetValue(warningValue.Property, out var fieldT))
+			{
+				continue;
+			}
+
+			var val = ReflectionUtils.GetAsT(warningValue.Value, fieldT.FieldType);
+
+			fieldT.SetValue(fieldAnalyzer, val);
 		}
 	}
 

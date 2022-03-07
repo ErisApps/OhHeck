@@ -4,13 +4,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
+using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Analyzer.Implementation;
 using OhHeck.Core.Helpers;
-using OhHeck.Core.Helpers.Converters;
-using OhHeck.Core.Models.Beatmap;
 using Serilog.Core;
 
 namespace OhHeck.CLI;
@@ -23,23 +20,7 @@ public static class Testing
 		log.Information("Testing map {Name}", name);
 		var fileStream = File.OpenRead(name);
 
-		var options = new JsonSerializerOptions
-		{
-			IgnoreReadOnlyProperties = false,
-			IgnoreReadOnlyFields = false,
-			IncludeFields = true,
-			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-			// mappers grr, to make configurable somehow
-			NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals
-		};
-
-		PointDefinitionReferenceHandler pointDefinitionReferenceHandler = new();
-		options.ReferenceHandler = pointDefinitionReferenceHandler;
-
-		var stopwatch = Stopwatch.StartNew();
-		var beatmapSaveData = JsonSerializer.Deserialize<BeatmapSaveData>(fileStream, options);
-		stopwatch.Stop();
-		pointDefinitionReferenceHandler.Reset();
+		var beatmapSaveData = JsonUtils.ParseBeatmap(fileStream, null, out var stopwatch);
 
 		log.Information("Parsed beatmap in {Count}ms", stopwatch.ElapsedMilliseconds);
 

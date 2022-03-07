@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
+using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Helpers.Enumerable;
 using OhHeck.Core.Models.ModData.Tracks;
 
@@ -13,9 +15,14 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 	// The minimum difference for considering not similar
 	// These numbers at quick glance seem to be fairly reliable, nice
 	// however they should be configurable or looked at later
-	private const float DIFFERENCE_THRESHOLD = 0.003f; // TODO: Configurable
-	private const float Y_INTERCEPT_DIFFERENCE_THRESHOLD = 0.5f; // TODO: Configurable
-	private const bool COMPARE_ALL_PREVIOUS_POINTS = true; // TODO: Configurable
+	[WarningConfigProperty("difference_threshold")]
+	private float _differenceThreshold = 0.003f;
+
+	[WarningConfigProperty("y_intercept_difference_threshold")]
+	private float _yInterceptDifferenceThreshold = 0.5f;
+
+	[WarningConfigProperty("compare_all_previous_points")]
+	private bool _compareAllPreviousPoints = true;
 
 	// Compares points a, b and c where b is between a and c.
 	// If a-b's slope is similar to a-c, it deems it unnecessary
@@ -57,7 +64,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 					prevPoint = middlePoint;
 
 #pragma warning disable CS0162
-					if (!COMPARE_ALL_PREVIOUS_POINTS)
+					if (!_compareAllPreviousPoints)
 					{
 						continue;
 					}
@@ -94,8 +101,8 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 			}
 		});
 
-	private static void WriteWarning(IWarningOutput warningOutput, string s, PointData startPoint, PointData middlePoint, IEnumerable<float> middleSlope, PointData endPoint, IEnumerable<float> endSlope) =>
-		warningOutput.WriteWarning($"Point data {s} slope and y intercept are closely intercepting and match easing/smooth {DIFFERENCE_THRESHOLD} slope ({middleSlope.ArrayToString()}): " +
+	private void WriteWarning(IWarningOutput warningOutput, string s, PointData startPoint, PointData middlePoint, IEnumerable<float> middleSlope, PointData endPoint, IEnumerable<float> endSlope) =>
+		warningOutput.WriteWarning($"Point data {s} slope and y intercept are closely intercepting and match easing/smooth {_differenceThreshold} slope ({middleSlope.ArrayToString()}): " +
 		                           $"Point1 {startPoint.Data.ArrayToString()}:{startPoint.Time} " +
 		                           $"Point2: {middlePoint.Data.ArrayToString()}:{middlePoint.Time} " +
 		                           $"Point3: {endPoint.Data.ArrayToString()}:{endPoint.Time}", typeof(SimilarPointDataSlope));
@@ -111,7 +118,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 	/// <param name="middleYIntercepts"></param>
 	/// <param name="endYIntercepts"></param>
 	/// <returns>true if similar</returns>
-	private static bool ComparePoints(PointData startPoint, PointData middlePoint, PointData endPoint, in float[] middleSlope, in float[] endSlope, in float[] middleYIntercepts, in float[] endYIntercepts)
+	private bool ComparePoints(PointData startPoint, PointData middlePoint, PointData endPoint, in float[] middleSlope, in float[] endSlope, in float[] middleYIntercepts, in float[] endYIntercepts)
 	{
 		// Skip points where their easing or smoothness is different,
 		// which would allow for middlePoint to cause a non-negligible difference
@@ -122,7 +129,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 
 		// Skip points that are identical with large time differences
 		// used for keyframe pause
-		if (Math.Abs(endPoint.Time - middlePoint.Time) > DIFFERENCE_THRESHOLD && endPoint.Data.AreFloatsSimilar(middlePoint.Data, DIFFERENCE_THRESHOLD))
+		if (Math.Abs(endPoint.Time - middlePoint.Time) > _differenceThreshold && endPoint.Data.AreFloatsSimilar(middlePoint.Data, _differenceThreshold))
 		{
 			return false;
 		}
@@ -151,9 +158,9 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 
 		return
 			// The points slope apply on the same Y intercept
-			middleYIntercepts.AreFloatsSimilar(endYIntercepts, Y_INTERCEPT_DIFFERENCE_THRESHOLD) &&
+			middleYIntercepts.AreFloatsSimilar(endYIntercepts, _yInterceptDifferenceThreshold) &&
 			// Both points are identical
-			middleSlope.AreFloatsSimilar(endSlope, DIFFERENCE_THRESHOLD);
+			middleSlope.AreFloatsSimilar(endSlope, _differenceThreshold);
 
 
 	}

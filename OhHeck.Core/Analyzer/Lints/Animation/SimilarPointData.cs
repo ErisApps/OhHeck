@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Helpers.Enumerable;
 
 namespace OhHeck.Core.Analyzer.Lints.Animation;
