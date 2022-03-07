@@ -56,6 +56,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 					if (ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
 					{
 						WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint, endSlope);
+						prevPoint = middlePoint;
 						continue;
 					}
 

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Analyzer.Implementation;
@@ -15,7 +16,7 @@ namespace OhHeck.CLI;
 public static class Testing
 {
 
-	public static void TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
+	public static async Task TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
 	{
 		log.Information("Testing map {Name}", name);
 		var fileStream = File.OpenRead(name);
@@ -50,7 +51,7 @@ public static class Testing
 
 		stopwatch = Stopwatch.StartNew();
 		WarningOutput warningOutput = new();
-		warningManager.AnalyzeBeatmap(beatmapSaveData, warningOutput);
+		await warningManager.AnalyzeBeatmap(beatmapSaveData, warningOutput).ConfigureAwait(true);
 		stopwatch.Stop();
 		log.Information("Took {Time}ms to analyze beatmap", stopwatch.ElapsedMilliseconds);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using CommandLine;
 using DryIoc;
 using OhHeck.CLI;
@@ -54,18 +55,18 @@ warningManager.Init(opt.SuppressedWarnings, opt.ConfigureWarningValuesProcessed)
 var maxWarningCount = opt.WarningCount;
 
 if (opt.Test) {
-	TestMapDefault("CentipedeEPlus");
+	await TestMapDefault("CentipedeEPlus");
 	log.Information("");
-	TestMapDefault("SomewhereOutThereEPlus");
+	await TestMapDefault("SomewhereOutThereEPlus");
 }
 else
 {
-	Testing.TestMap(log, opt.Map, warningManager, maxWarningCount);
+	await Testing.TestMap(log, opt.Map, warningManager, maxWarningCount);
 }
 
 return (int) result.Tag;
 
-void TestMapDefault(string name)
+async Task TestMapDefault(string name)
 {
-	Testing.TestMap(log, $"./test_maps/{name}.dat", warningManager, maxWarningCount);
+	await Testing.TestMap(log, $"./test_maps/{name}.dat", warningManager, maxWarningCount);
 }
