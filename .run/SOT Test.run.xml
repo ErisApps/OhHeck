@@ -1,7 +1,7 @@
 ﻿<component name="ProjectRunConfigurationManager">
   <configuration default="false" name="SOT Test" type="DotNetProject" factoryName=".NET Project">
     <option name="EXE_PATH" value="$PROJECT_DIR$/OhHeck.CLI/bin/Debug/net6.0/OhHeck.CLI.exe" />
-    <option name="PROGRAM_PARAMETERS" value="-wends-with-regex-lookup ./test_maps/SomewhereOutThereEPlus.dat -wc 70" />
+    <option name="PROGRAM_PARAMETERS" value="--suppressed-warnings ends-with-regex-lookup --warning-count 70 --map ./test_maps/SomewhereOutThereEPlus.dat" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/OhHeck.CLI" />
     <option name="PASS_PARENT_ENVS" value="1" />
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
