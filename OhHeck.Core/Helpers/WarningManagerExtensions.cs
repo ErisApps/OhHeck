@@ -24,7 +24,6 @@ public static class WarningManagerExtensions
 		}
 
 		var customData = beatmapSaveData.BeatmapCustomData;
-		warningManager.Analyze(customData, warningOutput);
 
 		customData.CustomEvents?.ForEach(x => warningManager.Analyze(x, warningOutput));
 		customData.EnvironmentEnhancements?.ForEach(x => warningManager.Analyze(x, warningOutput));
