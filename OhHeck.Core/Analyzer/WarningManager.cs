@@ -31,9 +31,7 @@ public class WarningManager
 	public void Init(IEnumerable<string> suppressedWarnings, IEnumerable<ConfigureWarningValue> configureWarningValues)
 	{
 		Dictionary<string, List<ConfigureWarningValue>> warningValuesDictionary = new();
-		var warningValues = configureWarningValues.ToList();
-
-		foreach (var configureWarningValue in warningValues)
+		foreach (var configureWarningValue in configureWarningValues)
 		{
 			if (!warningValuesDictionary.TryGetValue(configureWarningValue.WarningName, out var list))
 			{
@@ -67,12 +65,16 @@ public class WarningManager
 			_logger.Debug("Class {Type} has warning attribute", type);
 
 			var instance = (IFieldAnalyzer) _container.New(type);
-			InjectWarningConfigValues(instance, type, warningValues);
+			if (warningValuesDictionary.TryGetValue(warningAttribute.Name, out var scopedWarningValues))
+			{
+				InjectWarningConfigValues(instance, type, scopedWarningValues);
+			}
+
 			_beatmapAnalyzers[warningAttribute.Name] = instance;
 		}
 	}
 
-	private void InjectWarningConfigValues(IFieldAnalyzer fieldAnalyzer, IReflect type, IEnumerable<ConfigureWarningValue> configureWarningValues)
+	private static void InjectWarningConfigValues(IFieldAnalyzer fieldAnalyzer, IReflect type, IEnumerable<ConfigureWarningValue> configureWarningValues)
 	{
 		// I hate this
 		// TODO: Support properties
