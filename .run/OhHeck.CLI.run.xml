@@ -1,7 +1,7 @@
 ﻿<component name="ProjectRunConfigurationManager">
   <configuration default="false" name="OhHeck.CLI" type="DotNetProject" factoryName=".NET Project">
-    <option name="EXE_PATH" value="$PROJECT_DIR$/OhHeck.CLI/bin/Debug/net6.0/OhHeck.CLI.exe" />
-    <option name="PROGRAM_PARAMETERS" value="--suppressed-warnings string-bool;ends-with-regex-lookup;similar-point-data-slopee --test --configure similar-point-data-slope:difference_threshold=5" />
+    <option name="EXE_PATH" value="$PROJECT_DIR$/OhHeck.CLI/bin/Release/net6.0/OhHeck.CLI.exe" />
+    <option name="PROGRAM_PARAMETERS" value="--suppressed-warnings string-bool;ends-with-regex-lookup;similar-point-data-slopee --test --configure similar-point-data-slope:compare_all_previous_points=true" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/OhHeck.CLI" />
     <option name="PASS_PARENT_ENVS" value="1" />
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
