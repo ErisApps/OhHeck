@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Analyzer.Implementation;
@@ -16,7 +15,15 @@ namespace OhHeck.CLI;
 public static class Testing
 {
 
-	public static async Task TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
+	private static void Validate(IEnumerable<AnalyzeProcessedData> analyzeProcessedDatas, WarningManager warningManager, IWarningOutput warningOutput)
+	{
+		foreach (var analyzeProcessedData in analyzeProcessedDatas)
+		{
+			warningManager.Validate(analyzeProcessedData, warningOutput);
+		}
+	}
+
+	public static void TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
 	{
 		log.Information("Testing map {Name}", name);
 		var fileStream = File.OpenRead(name);
@@ -49,11 +56,17 @@ public static class Testing
 		log.Information("Environment enhancements: {Count}", beatmapCustomData.EnvironmentEnhancements?.Count ?? -1);
 		log.Information("Custom Events: {Count}", beatmapCustomData.CustomEvents?.Count ?? -1);
 
-		stopwatch = Stopwatch.StartNew();
 		WarningOutput warningOutput = new();
-		await warningManager.AnalyzeBeatmap(beatmapSaveData, warningOutput).ConfigureAwait(true);
-		stopwatch.Stop();
+		stopwatch = Stopwatch.StartNew();
+
+		var analyzeProcessedDatas = warningManager.AnalyzeBeatmap(beatmapSaveData);
 		log.Information("Took {Time}ms to analyze beatmap", stopwatch.ElapsedMilliseconds);
+		stopwatch.Restart();
+
+		Validate(analyzeProcessedDatas, warningManager, warningOutput);
+		stopwatch.Stop();
+		log.Information("Took {Time}ms to validate beatmap", stopwatch.ElapsedMilliseconds);
+
 
 		var warningCount = 0;
 		var analyzerNameDictionary = new Dictionary<Type, string>();
