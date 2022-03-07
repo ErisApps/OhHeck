@@ -9,8 +9,11 @@ namespace OhHeck.Core.Analyzer.Lints.Animation;
 public class SimilarPointData : IFieldAnalyzer {
 
 	// The minimum difference for considering not similar
-	private const float DIFFERENCE_THRESHOLD = 1f; // TODO: Configurable
-	private const float TIME_DIFFERENCE_THRESHOLD = 0.03f; // TODO: Configurable
+	[WarningConfigProperty("difference_threshold")]
+	private float _differenceThreshold = 1f;
+
+	[WarningConfigProperty("time_difference_threshold")]
+	private float _timeDifferenceThreshold = 0.03f;
 
 	// I've got no idea if this is a reliable algorithm
 	// Compares two points and attempts to make a rough estimate of whether they're similar/redundant
@@ -56,16 +59,16 @@ public class SimilarPointData : IFieldAnalyzer {
 					// ]}
 
 					// Both points are identical
-					if (prevPoint.Data.AreFloatsSimilar(point.Data, DIFFERENCE_THRESHOLD)
+					if (prevPoint.Data.AreFloatsSimilar(point.Data, _differenceThreshold)
 					    &&
 						    // time difference is small
-						    leftMiddleTimeDifference <= TIME_DIFFERENCE_THRESHOLD
+						    leftMiddleTimeDifference <= _timeDifferenceThreshold
 					    // if no point after this
 					    // or if the next point datas are similar to the middle, which makes the middle redundant
-					    && (nextPoint is null || nextPoint.Data.AreFloatsSimilar(point.Data, DIFFERENCE_THRESHOLD))
+					    && (nextPoint is null || nextPoint.Data.AreFloatsSimilar(point.Data, _differenceThreshold))
 					   )
 					{
-						var message = $"Point data {s} are too similar relative to the time difference {DIFFERENCE_THRESHOLD}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
+						var message = $"Point data {s} are too similar relative to the time difference {_differenceThreshold}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
 						              $"Point2: {point.Data.ArrayToString()}:{point.Time}";
 
 						if (nextPoint is not null)
