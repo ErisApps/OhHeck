@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Linq;
 using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Helpers.Enumerable;
@@ -30,7 +29,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 	// Compares points a, b and c where b is between a and c.
 	// If a-b's slope is similar to a-c, it deems it unnecessary
 	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput) =>
-		PointLintHelper.AnalyzePoints(value, outerWarningOutput, (pointDataDictionary, warningOutput) =>
+		PointLintHelper.AnalyzePoints(this, value, outerWarningOutput, static (pointDataDictionary, self, warningOutput) =>
 		{
 
 			foreach (var (s, pointDatas) in pointDataDictionary)
@@ -56,14 +55,14 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 					var middlePoint = pointDatas[i];
 
 					// skip these points because time difference is too small
-					if (MathF.Abs(prevPoint.Time - endPoint.Time) <= _timeDifferenceThreshold)
+					if (MathF.Abs(prevPoint.Time - endPoint.Time) <= self._timeDifferenceThreshold)
 					{
 						continue;
 					}
 
-					if (ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
+					if (self.ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
 					{
-						WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint, endSlope);
+						self.WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint);
 						continue;
 					}
 
@@ -72,7 +71,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 					prevPoint = middlePoint;
 
 #pragma warning disable CS0162
-					if (!_compareAllPreviousPoints)
+					if (!self._compareAllPreviousPoints)
 					{
 						continue;
 					}
@@ -98,9 +97,9 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 								continue;
 							}
 
-							if (ComparePoints(startPoint, middlePoint2, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
+							if (self.ComparePoints(startPoint, middlePoint2, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
 							{
-								WriteWarning(warningOutput, s, startPoint, middlePoint2, middleSlope, endPoint, endSlope);
+								self.WriteWarning(warningOutput, s, startPoint, middlePoint2, middleSlope, endPoint);
 							}
 						}
 					}
@@ -109,7 +108,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 			}
 		});
 
-	private void WriteWarning(IWarningOutput warningOutput, string s, PointData startPoint, PointData middlePoint, IEnumerable<float> middleSlope, PointData endPoint, IEnumerable<float> endSlope) =>
+	private void WriteWarning(IWarningOutput warningOutput, string s, PointData startPoint, PointData middlePoint, IEnumerable<float> middleSlope, PointData endPoint) =>
 		warningOutput.WriteWarning($"Point data {s} slope and y intercept are closely intercepting and match easing/smooth {_differenceThreshold} slope ({middleSlope.ArrayToString()}): " +
 		                           $"Point1 {startPoint.Data.ArrayToString()}:{startPoint.Time} " +
 		                           $"Point2: {middlePoint.Data.ArrayToString()}:{middlePoint.Time} " +

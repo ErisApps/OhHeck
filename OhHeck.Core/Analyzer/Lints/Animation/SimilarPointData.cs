@@ -19,7 +19,7 @@ public class SimilarPointData : IFieldAnalyzer {
 	// Compares two points and attempts to make a rough estimate of whether they're similar/redundant
 	// based on their keyframe difference and time difference
 	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput) =>
-		PointLintHelper.AnalyzePoints(value,  outerWarningOutput, (pointDataDictionary, warningOutput) =>
+		PointLintHelper.AnalyzePoints(this, value,  outerWarningOutput, static (pointDataDictionary, self, warningOutput) =>
 		{
 
 			foreach (var (s, pointDatas) in pointDataDictionary)
@@ -59,16 +59,16 @@ public class SimilarPointData : IFieldAnalyzer {
 					// ]}
 
 					// Both points are identical
-					if (prevPoint.Data.AreFloatsSimilar(point.Data, _differenceThreshold)
+					if (prevPoint.Data.AreFloatsSimilar(point.Data, self._differenceThreshold)
 					    &&
 						    // time difference is small
-						    leftMiddleTimeDifference <= _timeDifferenceThreshold
+						    leftMiddleTimeDifference <= self._timeDifferenceThreshold
 					    // if no point after this
 					    // or if the next point datas are similar to the middle, which makes the middle redundant
-					    && (nextPoint is null || nextPoint.Data.AreFloatsSimilar(point.Data, _differenceThreshold))
+					    && (nextPoint is null || nextPoint.Data.AreFloatsSimilar(point.Data, self._differenceThreshold))
 					   )
 					{
-						var message = $"Point data {s} are too similar relative to the time difference {_differenceThreshold}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
+						var message = $"Point data {s} are too similar relative to the time difference {self._differenceThreshold}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
 						              $"Point2: {point.Data.ArrayToString()}:{point.Time}";
 
 						if (nextPoint is not null)
@@ -76,7 +76,7 @@ public class SimilarPointData : IFieldAnalyzer {
 							message += $" Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
 						}
 
-						warningOutput.WriteWarning(message, GetType());
+						warningOutput.WriteWarning(message, self.GetType());
 					}
 
 					prevPoint = point;

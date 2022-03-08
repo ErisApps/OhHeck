@@ -11,7 +11,7 @@ public class DuplicatePointData : IFieldAnalyzer {
 
 	// Checks if points are duplicated
 	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput) =>
-		PointLintHelper.AnalyzePoints(value, outerWarningOutput, (pointDataDictionary, warningOutput) =>
+		PointLintHelper.AnalyzePoints(this, value, outerWarningOutput, static (pointDataDictionary, self, warningOutput) =>
 		{
 			foreach (var (s, pointDatas) in pointDataDictionary)
 			{
@@ -46,7 +46,7 @@ public class DuplicatePointData : IFieldAnalyzer {
 							message += $" Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
 						}
 
-						warningOutput.WriteWarning(message, GetType());
+						warningOutput.WriteWarning(message, self.GetType());
 					}
 
 
