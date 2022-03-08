@@ -19,7 +19,16 @@ public static class Testing
 	{
 		foreach (var analyzeProcessedData in analyzeProcessedDatas)
 		{
-			warningManager.Validate(analyzeProcessedData, warningOutput);
+			try
+			{
+				warningManager.Validate(analyzeProcessedData, warningOutput);
+			}
+			catch (Exception e)
+			{
+				// Throw with information
+				throw new AggregateException(
+					$"Caught an exception on field {analyzeProcessedData.WarningContext.Parent} {analyzeProcessedData.WarningContext.Type}:{analyzeProcessedData.WarningContext.MemberLocation}", e);
+			}
 		}
 	}
 
