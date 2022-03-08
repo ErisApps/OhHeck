@@ -129,6 +129,7 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 			}
 		}
 
+		PointHelper.SortPoints(pointDatas);
 		return pointDatas;
 	}
 
