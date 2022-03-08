@@ -54,15 +54,14 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 					var endPoint = pointDatas[i + 1];
 					var middlePoint = pointDatas[i];
 
-					// skip these points because time difference is too small
-					if (MathF.Abs(prevPoint.Time - endPoint.Time) <= self._timeDifferenceThreshold)
+					if (self.ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts, out var skip))
 					{
+						self.WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint);
 						continue;
 					}
 
-					if (self.ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
+					if (skip)
 					{
-						self.WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint);
 						continue;
 					}
 
@@ -97,7 +96,14 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 								continue;
 							}
 
-							if (self.ComparePoints(startPoint, middlePoint2, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
+							// TODO: Yeet
+							// skip points if non-linear time
+							// if (startPoint.Time >= middlePoint2.Time != middlePoint2.Time >= endPoint.Time)
+							// {
+							// 	continue;
+							// }
+
+							if (self.ComparePoints(startPoint, middlePoint2, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts, out _))
 							{
 								self.WriteWarning(warningOutput, s, startPoint, middlePoint2, middleSlope, endPoint);
 							}
@@ -125,8 +131,27 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 	/// <param name="middleYIntercepts"></param>
 	/// <param name="endYIntercepts"></param>
 	/// <returns>true if similar</returns>
-	private bool ComparePoints(PointData startPoint, PointData middlePoint, PointData endPoint, in float[] middleSlope, in float[] endSlope, in float[] middleYIntercepts, in float[] endYIntercepts)
+	private bool ComparePoints(PointData startPoint, PointData middlePoint, PointData endPoint, in float[] middleSlope, in float[] endSlope, in float[] middleYIntercepts, in float[] endYIntercepts, out bool skip)
 	{
+		skip = true;
+		// skip these points because time difference is too small
+		if (MathF.Abs(startPoint.Time - endPoint.Time) <= _timeDifferenceThreshold ||
+		    MathF.Abs(startPoint.Time - middlePoint.Time) <= _timeDifferenceThreshold ||
+		    MathF.Abs(middlePoint.Time - endPoint.Time) <= _timeDifferenceThreshold)
+		{
+			return false;
+		}
+
+		// TODO: Yeet, it's sorted by time I'm stupid
+		// skip points if non-linear time
+		// to ignore points where time bounces between pointA and pointC
+		// example: [[0, 0, 0.5], [0, 0.5, 0.3], [0, -1, 0]]
+		// if previous point time is greater than or equal to the 3rd point == if middle point time is lesser than or equal to endPoint time
+		// if ((startPoint.Time >= middlePoint.Time) != (middlePoint.Time >= endPoint.Time))
+		// {
+		// 	return false;
+		// }
+
 		// Skip points where their easing or smoothness is different,
 		// which would allow for middlePoint to cause a non-negligible difference
 		if (endPoint.Easing != middlePoint.Easing || endPoint.Smooth != middlePoint.Smooth)
@@ -162,6 +187,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 		// [2,2,2,2,1]
 		// ]}
 
+		skip = false;
 
 		return
 			// The points slope apply on the same Y intercept
