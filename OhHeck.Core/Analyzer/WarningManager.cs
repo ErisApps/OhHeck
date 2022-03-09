@@ -35,18 +35,9 @@ public class WarningManager
 
 	public void Init(IEnumerable<string> suppressedWarnings, IEnumerable<ConfigureWarningValue> configureWarningValues)
 	{
-		Dictionary<string, List<ConfigureWarningValue>> warningValuesDictionary = new();
-		foreach (var configureWarningValue in configureWarningValues)
-		{
-			if (!warningValuesDictionary.TryGetValue(configureWarningValue.WarningName, out var list))
-			{
-				warningValuesDictionary[configureWarningValue.WarningName] = list = new List<ConfigureWarningValue>();
-			}
+		var registeredCache = new Dictionary<Type, BeatmapWarningAttribute>();
 
-			list.Add(configureWarningValue);
-		}
-
-
+		// Register to DI
 		_suppressedWarnings = new HashSet<string>(suppressedWarnings);
 		foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
 		{
@@ -57,7 +48,8 @@ public class WarningManager
 				continue;
 			}
 
-			if (_beatmapAnalyzers.TryGetValue(warningAttribute.Name, out var existingWarning))
+			var existingWarning = _container.Resolve<IFieldAnalyzer>(serviceKey: warningAttribute.Name, IfUnresolved.ReturnDefaultIfNotRegistered);
+			if (existingWarning is not null)
 			{
 				throw new InvalidOperationException($"Beatmap analyzer {warningAttribute} already exists tied to {existingWarning.GetType()}");
 			}
@@ -69,13 +61,39 @@ public class WarningManager
 
 			_logger.Debug("Class {Type} has warning attribute", type);
 
-			var instance = (IFieldAnalyzer) _container.New(type);
-			if (warningValuesDictionary.TryGetValue(warningAttribute.Name, out var scopedWarningValues))
+			_container.Register(typeof(IFieldAnalyzer), type, serviceKey: warningAttribute.Name, reuse: Reuse.Singleton);
+			registeredCache[type] = warningAttribute;
+		}
+
+		// Now resolve finally dependencies
+		var registeredFieldAnalyzers = _container.ResolveMany<IFieldAnalyzer>();
+
+		if (registeredFieldAnalyzers is null)
+		{
+			return;
+		}
+
+		Dictionary<string, List<ConfigureWarningValue>> warningValuesDictionary = new();
+		foreach (var configureWarningValue in configureWarningValues)
+		{
+			if (!warningValuesDictionary.TryGetValue(configureWarningValue.WarningName, out var list))
 			{
-				InjectWarningConfigValues(instance, type, scopedWarningValues);
+				warningValuesDictionary[configureWarningValue.WarningName] = list = new List<ConfigureWarningValue>();
 			}
 
-			_beatmapAnalyzers[warningAttribute.Name] = instance;
+			list.Add(configureWarningValue);
+		}
+
+		foreach (var registeredFieldAnalyzer in registeredFieldAnalyzers)
+		{
+			var type = registeredFieldAnalyzer.GetType();
+			var warningAttribute = registeredCache[type];
+			if (warningValuesDictionary.TryGetValue(warningAttribute.Name, out var scopedWarningValues))
+			{
+				InjectWarningConfigValues(registeredFieldAnalyzer, type, scopedWarningValues);
+			}
+
+			_beatmapAnalyzers[warningAttribute.Name] = registeredFieldAnalyzer;
 		}
 	}
 
@@ -104,20 +122,14 @@ public class WarningManager
 	{
 		var (memberType, memberValue, warningContext) = analyzeProcessedData;
 
-		if (warningContext is not null)
-		{
-			warningOutput.PushWarningInfo(warningContext);
-		}
+		warningOutput.PushWarningInfo(warningContext);
 
 		foreach (var (_, analyzer) in _beatmapAnalyzers)
 		{
 			analyzer.Validate(memberType, memberValue, warningOutput);
 		}
 
-		if (warningContext is not null)
-		{
-			warningOutput.PopWarningInfo();
-		}
+		warningOutput.PopWarningInfo();
 	}
 
 	// Nullable
