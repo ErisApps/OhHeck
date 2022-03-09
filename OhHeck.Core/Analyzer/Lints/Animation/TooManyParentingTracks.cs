@@ -25,7 +25,8 @@ public class TooManyParentingTracks : IFieldAnalyzer
 
 		if (parentTrackCount > _trackParentingMaximum)
 		{
-			outerWarningOutput.WriteWarning("Excessive amounts of parent track events. Parenting is inefficient, consider using less. Found {ParentTrackCount} > {TrackParentingExcess}", GetType(), parentTrackCount, TRACK_PARENTING_EXCESS);
+			outerWarningOutput.WriteWarning("Excessive amounts of parent track events. Parenting is inefficient, consider using less. Found {ParentTrackCount} > {TrackParentingExcess}", GetType(),
+				parentTrackCount.ToString(), _trackParentingMaximum.ToString());
 		}
 	}
 }
