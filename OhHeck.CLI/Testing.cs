@@ -36,6 +36,43 @@ public static class Testing
 		}
 	}
 
+	private static string FormatString(string message, IReadOnlyList<object?>? formatParams)
+	{
+		string messageFormatted;
+		if (formatParams is not null && formatParams.Count != 0)
+		{
+			var stringBuilder = new StringBuilder(message.Length);
+			var parser = new MessageTemplateParser();
+
+			var template = parser.Parse(message);
+
+			var index = 0;
+			foreach (var tok in template.Tokens)
+			{
+				object s = tok;
+				if (tok is not TextToken)
+				{
+					s = formatParams[index++] ?? "null";
+
+					if (s is IEnumerable enumerable and not string)
+					{
+						s = enumerable.ArrayToString();
+					}
+				}
+
+				stringBuilder.Append(s);
+			}
+
+			messageFormatted = stringBuilder.ToString();
+		}
+		else
+		{
+			messageFormatted = message;
+		}
+
+		return messageFormatted;
+	}
+
 	public static void TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
 	{
 		log.Information("Testing map {Name}", name);
@@ -99,38 +136,8 @@ public static class Testing
 			var (type, memberLocation, parent) = warningInfo;
 
 
-			string messageFormatted;
-			if (formatParams != null && formatParams.Length != 0)
-			{
-				var stringBuilder = new StringBuilder(message.Length);
-				var parser = new MessageTemplateParser();
 
-				var template = parser.Parse(message);
-
-				var index = 0;
-				foreach (var tok in template.Tokens)
-				{
-					object s = tok;
-					if (tok is not TextToken)
-					{
-						s = formatParams[index++] ?? "null";
-
-						if (s is IEnumerable enumerable and not string)
-						{
-							s = enumerable.ArrayToString();
-						}
-					}
-
-					stringBuilder.Append(s);
-				}
-
-				messageFormatted = stringBuilder.ToString();
-			}
-			else
-			{
-				messageFormatted = message;
-			}
-
+			var messageFormatted = FormatString(message, formatParams);
 			log.Warning("Warning [{AnalyzerName}]: {Type}:{{{MemberLocation}}} {MessageFormatted}", analyzerName, type, memberLocation, messageFormatted);
 			if (parent is not null)
 			{
