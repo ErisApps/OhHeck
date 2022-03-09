@@ -1,49 +1,43 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
+using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Analyzer.Implementation;
 using OhHeck.Core.Helpers;
-using OhHeck.Core.Helpers.Converters;
-using OhHeck.Core.Helpers.Enumerable;
-using OhHeck.Core.Models.Beatmap;
 using Serilog.Core;
-using Serilog.Parsing;
 
 namespace OhHeck.CLI;
 
 public static class Testing
 {
 
+	private static void Validate(IEnumerable<AnalyzeProcessedData> analyzeProcessedDatas, WarningManager warningManager, IWarningOutput warningOutput)
+	{
+		foreach (var analyzeProcessedData in analyzeProcessedDatas)
+		{
+			try
+			{
+				warningManager.Validate(analyzeProcessedData, warningOutput);
+			}
+			catch (Exception e)
+			{
+				// Throw with information
+				throw new AggregateException(
+					$"Caught an exception on field {analyzeProcessedData.WarningContext.Parent} {analyzeProcessedData.WarningContext.Type}:{analyzeProcessedData.WarningContext.MemberLocation}", e);
+			}
+		}
+	}
+
 	public static void TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
 	{
 		log.Information("Testing map {Name}", name);
 		var fileStream = File.OpenRead(name);
 
-		var options = new JsonSerializerOptions
-		{
-			IgnoreReadOnlyProperties = false,
-			IgnoreReadOnlyFields = false,
-			IncludeFields = true,
-			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-			// mappers grr, to make configurable somehow
-			NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals
-		};
-
-		PointDefinitionReferenceHandler pointDefinitionReferenceHandler = new();
-		options.ReferenceHandler = pointDefinitionReferenceHandler;
-
-		var stopwatch = Stopwatch.StartNew();
-		var beatmapSaveData = JsonSerializer.Deserialize<BeatmapSaveData>(fileStream, options);
-		stopwatch.Stop();
-		pointDefinitionReferenceHandler.Reset();
+		var beatmapSaveData = JsonUtils.ParseBeatmap(fileStream, null, out var stopwatch);
 
 		log.Information("Parsed beatmap in {Count}ms", stopwatch.ElapsedMilliseconds);
 
@@ -71,11 +65,17 @@ public static class Testing
 		log.Information("Environment enhancements: {Count}", beatmapCustomData.EnvironmentEnhancements?.Count ?? -1);
 		log.Information("Custom Events: {Count}", beatmapCustomData.CustomEvents?.Count ?? -1);
 
-		stopwatch = Stopwatch.StartNew();
 		WarningOutput warningOutput = new();
-		warningManager.AnalyzeBeatmap(beatmapSaveData, warningOutput);
-		stopwatch.Stop();
+		stopwatch = Stopwatch.StartNew();
+
+		var analyzeProcessedDatas = warningManager.AnalyzeBeatmap(beatmapSaveData);
 		log.Information("Took {Time}ms to analyze beatmap", stopwatch.ElapsedMilliseconds);
+		stopwatch.Restart();
+
+		Validate(analyzeProcessedDatas, warningManager, warningOutput);
+		stopwatch.Stop();
+		log.Information("Took {Time}ms to validate beatmap", stopwatch.ElapsedMilliseconds);
+
 
 		var warningCount = 0;
 		var analyzerNameDictionary = new Dictionary<Type, string>();

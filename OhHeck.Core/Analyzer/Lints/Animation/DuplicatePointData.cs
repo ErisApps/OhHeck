@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Helpers.Enumerable;
 using OhHeck.Core.Models.ModData.Tracks;
 
@@ -11,7 +12,7 @@ public class DuplicatePointData : IFieldAnalyzer {
 
 	// Checks if points are duplicated
 	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput) =>
-		PointLintHelper.AnalyzePoints(value, outerWarningOutput, (pointDataDictionary, warningOutput) =>
+		PointLintHelper.AnalyzePoints(this, value, outerWarningOutput, static (pointDataDictionary, self, warningOutput) =>
 		{
 			foreach (var (s, pointDatas) in pointDataDictionary)
 			{

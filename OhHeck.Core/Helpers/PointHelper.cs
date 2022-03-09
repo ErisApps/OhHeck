@@ -7,6 +7,22 @@ namespace OhHeck.Core.Helpers;
 
 public static class PointHelper
 {
+
+	public static void SortPoints(List<PointData> pointDatas) => pointDatas.Sort((a, b) =>
+	{
+		if (a.Time > b.Time)
+		{
+			return 1;
+		}
+
+		if (a.Time < b.Time)
+		{
+			return -1;
+		}
+
+		return 0;
+	});
+
 	public static List<PointData>? GetPointDatas(object? v) =>
 		v switch
 		{
@@ -43,6 +59,7 @@ public static class PointHelper
 				case IEnumerable<object> objects:
 				{
 					var pointDatas = objects.Select(p => new PointData((List<object>) p)).ToList();
+					SortPoints(pointDatas);
 					pointDefinitionDatas[name] = new PointDefinitionData(name, pointDatas);
 					break;
 				}

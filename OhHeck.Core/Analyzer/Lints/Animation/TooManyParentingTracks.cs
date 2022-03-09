@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Models.Beatmap;
 
 namespace OhHeck.Core.Analyzer.Lints.Animation;
@@ -10,8 +11,8 @@ public class TooManyParentingTracks : IFieldAnalyzer
 {
 	// grrr 2000 objects
 
-	// TODO: Inject?
-	private const int TRACK_PARENTING_EXCESS = 20;
+	[WarningConfigProperty("track_parenting_maximum")]
+	private int _trackParentingMaximum = 20;
 
 	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput)
 	{
@@ -22,7 +23,7 @@ public class TooManyParentingTracks : IFieldAnalyzer
 
 		var parentTrackCount = events.Count(e => e.Type == EventTypes.ASSIGN_TRACK_PARENT);
 
-		if (parentTrackCount > TRACK_PARENTING_EXCESS)
+		if (parentTrackCount > _trackParentingMaximum)
 		{
 			outerWarningOutput.WriteWarning("Excessive amounts of parent track events. Parenting is inefficient, consider using less. Found {ParentTrackCount} > {TrackParentingExcess}", GetType(), parentTrackCount, TRACK_PARENTING_EXCESS);
 		}

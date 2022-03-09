@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using DryIoc;
+using OhHeck.Core.Analyzer.Attributes;
+using OhHeck.Core.Analyzer.Implementation;
 using OhHeck.Core.Helpers;
 using Serilog;
 
@@ -12,6 +15,9 @@ public class WarningManager
 	private readonly Dictionary<string, IFieldAnalyzer> _beatmapAnalyzers = new();
 	private static readonly Type BeatmapAnalyzerType = typeof(IFieldAnalyzer);
 	private static readonly Type AnalyzableType = typeof(IAnalyzable);
+
+	[ThreadStatic]
+	private static Dictionary<IReflect, IReadOnlyDictionary<MemberInfo, MemberData>> _cachedAnalyzedFields;
 
 	private readonly IContainer _container;
 	private readonly ILogger _logger;
@@ -25,19 +31,25 @@ public class WarningManager
 		_logger = logger;
 	}
 
-	public void Init(HashSet<string> suppressedWarnings)
+	static WarningManager() => _cachedAnalyzedFields = new Dictionary<IReflect, IReadOnlyDictionary<MemberInfo, MemberData>>();
+
+	public void Init(IEnumerable<string> suppressedWarnings, IEnumerable<ConfigureWarningValue> configureWarningValues)
 	{
-		_suppressedWarnings = suppressedWarnings;
+		var registeredCache = new Dictionary<Type, BeatmapWarningAttribute>();
+
+		// Register to DI
+		_suppressedWarnings = new HashSet<string>(suppressedWarnings);
 		foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
 		{
 			var warningAttribute = type.GetCustomAttribute<BeatmapWarningAttribute>();
 
-			if (warningAttribute is null || suppressedWarnings.Contains(warningAttribute.Name))
+			if (warningAttribute is null || _suppressedWarnings.Contains(warningAttribute.Name))
 			{
 				continue;
 			}
 
-			if (_beatmapAnalyzers.TryGetValue(warningAttribute.Name, out var existingWarning))
+			var existingWarning = _container.Resolve<IFieldAnalyzer>(serviceKey: warningAttribute.Name, IfUnresolved.ReturnDefaultIfNotRegistered);
+			if (existingWarning is not null)
 			{
 				throw new InvalidOperationException($"Beatmap analyzer {warningAttribute} already exists tied to {existingWarning.GetType()}");
 			}
@@ -49,50 +61,142 @@ public class WarningManager
 
 			_logger.Debug("Class {Type} has warning attribute", type);
 
-			var instance = (IFieldAnalyzer) _container.New(type);
-			_beatmapAnalyzers[warningAttribute.Name] = instance;
+			_container.Register(typeof(IFieldAnalyzer), type, serviceKey: warningAttribute.Name, reuse: Reuse.Singleton);
+			registeredCache[type] = warningAttribute;
+		}
+
+		// Now resolve finally dependencies
+		var registeredFieldAnalyzers = _container.ResolveMany<IFieldAnalyzer>();
+
+		if (registeredFieldAnalyzers is null)
+		{
+			return;
+		}
+
+		Dictionary<string, List<ConfigureWarningValue>> warningValuesDictionary = new();
+		foreach (var configureWarningValue in configureWarningValues)
+		{
+			if (!warningValuesDictionary.TryGetValue(configureWarningValue.WarningName, out var list))
+			{
+				warningValuesDictionary[configureWarningValue.WarningName] = list = new List<ConfigureWarningValue>();
+			}
+
+			list.Add(configureWarningValue);
+		}
+
+		foreach (var registeredFieldAnalyzer in registeredFieldAnalyzers)
+		{
+			var type = registeredFieldAnalyzer.GetType();
+			var warningAttribute = registeredCache[type];
+			if (warningValuesDictionary.TryGetValue(warningAttribute.Name, out var scopedWarningValues))
+			{
+				InjectWarningConfigValues(registeredFieldAnalyzer, type, scopedWarningValues);
+			}
+
+			_beatmapAnalyzers[warningAttribute.Name] = registeredFieldAnalyzer;
 		}
 	}
 
-	// Nullable
-	public void Analyze(IAnalyzable? analyzable, IAnalyzable? parent, Type type, IWarningOutput warningOutput)
+	private static void InjectWarningConfigValues(IFieldAnalyzer fieldAnalyzer, IReflect type, IEnumerable<ConfigureWarningValue> configureWarningValues)
 	{
+		// I hate this
+		// TODO: Support properties
+		// TODO: Support constructor
+		var fieldTypes = type.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic).ToDictionary(f => f.GetCustomAttribute<WarningConfigPropertyAttribute>()?.ContractName ?? string.Empty, f => f);
+
+		foreach (var warningValue in configureWarningValues)
+		{
+			if (!fieldTypes.TryGetValue(warningValue.Property, out var fieldT))
+			{
+				continue;
+			}
+
+			var val = ReflectionUtils.GetAsT(warningValue.Value, fieldT.FieldType);
+
+			fieldT.SetValue(fieldAnalyzer, val);
+		}
+	}
+
+	// TODO: Rewrite this is confusing even for me
+	public void Validate(AnalyzeProcessedData analyzeProcessedData, IWarningOutput warningOutput)
+	{
+		var (memberType, memberValue, warningContext) = analyzeProcessedData;
+
+		warningOutput.PushWarningInfo(warningContext);
+
+		foreach (var (_, analyzer) in _beatmapAnalyzers)
+		{
+			analyzer.Validate(memberType, memberValue, warningOutput);
+		}
+
+		warningOutput.PopWarningInfo();
+	}
+
+	// Nullable
+	public ICollection<AnalyzeProcessedData> Analyze(IAnalyzable? analyzable, IAnalyzable? parent, Type type, ICollection<AnalyzeProcessedData>? analyzeDatas = null)
+	{
+		analyzeDatas ??= new List<AnalyzeProcessedData>();
+
 		// Early return
 		if (_beatmapAnalyzers.Count == 0)
 		{
-			return;
+			return analyzeDatas;
 		}
 
-		var friendlyName = analyzable?.GetFriendlyName() ?? type.Name;
-
-		var memberInfos = AnalyzeMemberInfo(analyzable, parent, type, friendlyName, warningOutput);
-
+		// null means no fields to analyze
 		if (analyzable is null)
 		{
-			return;
+			return analyzeDatas;
 		}
 
-		// Now to recursively analyze
-		foreach (var (_, (memberValue, memberType, friendlyMemberName)) in memberInfos)
+		var friendlyName = analyzable.GetFriendlyName();
+		var memberInfos = GetPublicMembersData(type);
+
+
+		foreach (var (_, (memberInfo, memberType, friendlyMemberName)) in memberInfos)
 		{
+			// TODO: Field accessor?
+			//get member value
+			object? memberValue = null;
+			if (analyzable is not null)
+			{
+				memberValue = memberInfo switch
+				{
+					PropertyInfo propertyInfo => propertyInfo.GetValue(analyzable),
+					FieldInfo fieldInfo => fieldInfo.GetValue(analyzable),
+					_ => memberValue
+				};
+			}
+
+			var analyzeData = new AnalyzeProcessedData(memberType, memberValue, new WarningContext(friendlyName, friendlyMemberName, parent));
+			analyzeDatas.Add(analyzeData);
+
+			// If not Analyzable, don't process
 			if (!AnalyzableType.IsAssignableFrom(memberType))
 			{
 				continue;
 			}
 
-			warningOutput.PushWarningInfo(new WarningContext(Type: friendlyName, MemberLocation: friendlyMemberName, Parent: parent));
+			// Get
 			var fieldValue = (IAnalyzable?) memberValue;
-			Analyze(fieldValue, analyzable, memberType, warningOutput);
-			warningOutput.PopWarningInfo();
+			Analyze(fieldValue, analyzable, memberType, analyzeDatas);
 		}
+
+		return analyzeDatas;
 	}
 
-	private Dictionary<MemberInfo, (object?, Type, string)> AnalyzeMemberInfo(IAnalyzable? analyzable, IAnalyzable? parent, IReflect type, string friendlyName, IWarningOutput warningOutput)
+	private static IReadOnlyDictionary<MemberInfo, MemberData> GetPublicMembersData(IReflect type)
 	{
+		// Double cache lets go!
+		if (_cachedAnalyzedFields.TryGetValue(type, out var cached))
+		{
+			return cached;
+		}
+
 		var memberInfos = ReflectionUtils.GetTypeFieldsSuperRecursive(type);
 
 		// Member object value, MemberType, friendlyMemberName
-		Dictionary<MemberInfo, (object?, Type, string)> memberValues = new();
+		Dictionary<MemberInfo, MemberData> memberValues = new();
 
 
 		// Analyze each field
@@ -109,27 +213,34 @@ public class WarningManager
 				_ => null
 			};
 
-			//get member value
-			object? memberValue = null;
-			if (analyzable is not null)
-			{
-				memberValue = memberInfo switch
-				{
-					PropertyInfo propertyInfo => propertyInfo.GetValue(analyzable),
-					FieldInfo fieldInfo => fieldInfo.GetValue(analyzable),
-					_ => memberValue
-				};
-			}
-
-			memberValues[memberInfo] = (memberValue, memberType!, friendlyMemberName);
-
-			warningOutput.PushWarningInfo(new WarningContext(Type: friendlyName, MemberLocation: friendlyMemberName, Parent: parent));
-			foreach (var (_, wAnalyzer) in _beatmapAnalyzers)
-			{
-				wAnalyzer.Validate(memberType!, memberValue, warningOutput);
-			}
-			warningOutput.PopWarningInfo();
+			memberValues[memberInfo] = new MemberData(memberInfo, memberType!, friendlyMemberName);
 		}
+
+		_cachedAnalyzedFields[type] = memberValues;
 		return memberValues;
 	}
+
+	private record MemberData(MemberInfo MemberInfo, Type MemberType, string FriendlyMemberName);
+	// private readonly struct MemberData
+	// {
+	// 	public readonly object? MemberValue;
+	// 	public readonly Type MemberType;
+	// 	public readonly string FriendlyMemberName;
+	//
+	// 	public MemberData(object? memberValue, Type memberType, string friendlyMemberName)
+	// 	{
+	// 		MemberValue = memberValue;
+	// 		MemberType = memberType;
+	// 		FriendlyMemberName = friendlyMemberName;
+	// 	}
+	//
+	// 	public void Deconstruct(out object? memberValue, out Type memberType, out string friendlyMemberName)
+	// 	{
+	// 		memberValue = MemberValue;
+	// 		memberType = MemberType;
+	// 		friendlyMemberName = FriendlyMemberName;
+	// 	}
+	// }
+
+
 }

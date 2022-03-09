@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Helpers.Enumerable;
 using OhHeck.Core.Models.ModData.Tracks;
 
@@ -10,16 +11,25 @@ namespace OhHeck.Core.Analyzer.Lints.Animation;
 public class SimilarPointDataSlope : IFieldAnalyzer
 {
 
+	// The minimum difference for considering not similar
 	// These numbers at quick glance seem to be fairly reliable, nice
 	// however they should be configurable or looked at later
-	private const float DIFFERENCE_THRESHOLD = 0.003f; // TODO: Configurable
-	private const float Y_INTERCEPT_DIFFERENCE_THRESHOLD = 0.5f; // TODO: Configurable
-	private const bool COMPARE_ALL_PREVIOUS_POINTS = true; // TODO: Configurable
+	[WarningConfigProperty("difference_threshold")]
+	private float _differenceThreshold = 0.003f;
+
+	[WarningConfigProperty("time_difference_threshold")]
+	private float _timeDifferenceThreshold = 0.025f;
+
+	[WarningConfigProperty("y_intercept_difference_threshold")]
+	private float _yInterceptDifferenceThreshold = 0.5f;
+
+	[WarningConfigProperty("compare_all_previous_points")]
+	private bool _compareAllPreviousPoints = true;
 
 	// Compares points a, b and c where b is between a and c.
 	// If a-b's slope is similar to a-c, it deems it unnecessary
 	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput) =>
-		PointLintHelper.AnalyzePoints(value, outerWarningOutput, (pointDataDictionary, warningOutput) =>
+		PointLintHelper.AnalyzePoints(this, value, outerWarningOutput, static (pointDataDictionary, self, warningOutput) =>
 		{
 
 			foreach (var (s, pointDatas) in pointDataDictionary)
@@ -44,10 +54,14 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 					var endPoint = pointDatas[i + 1];
 					var middlePoint = pointDatas[i];
 
-
-					if (ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
+					if (self.ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts, out var skip))
 					{
-						WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint, endSlope);
+						self.WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint);
+						continue;
+					}
+
+					if (skip)
+					{
 						continue;
 					}
 
@@ -56,7 +70,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 					prevPoint = middlePoint;
 
 #pragma warning disable CS0162
-					if (!COMPARE_ALL_PREVIOUS_POINTS)
+					if (!self._compareAllPreviousPoints)
 					{
 						continue;
 					}
@@ -82,9 +96,16 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 								continue;
 							}
 
-							if (ComparePoints(startPoint, middlePoint2, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts))
+							// TODO: Yeet
+							// skip points if non-linear time
+							// if (startPoint.Time >= middlePoint2.Time != middlePoint2.Time >= endPoint.Time)
+							// {
+							// 	continue;
+							// }
+
+							if (self.ComparePoints(startPoint, middlePoint2, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts, out _))
 							{
-								WriteWarning(warningOutput, s, startPoint, middlePoint2, middleSlope, endPoint, endSlope);
+								self.WriteWarning(warningOutput, s, startPoint, middlePoint2, middleSlope, endPoint);
 							}
 						}
 					}
@@ -115,8 +136,27 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 	/// <param name="middleYIntercepts"></param>
 	/// <param name="endYIntercepts"></param>
 	/// <returns>true if similar</returns>
-	private static bool ComparePoints(PointData startPoint, PointData middlePoint, PointData endPoint, in float[] middleSlope, in float[] endSlope, in float[] middleYIntercepts, in float[] endYIntercepts)
+	private bool ComparePoints(PointData startPoint, PointData middlePoint, PointData endPoint, in float[] middleSlope, in float[] endSlope, in float[] middleYIntercepts, in float[] endYIntercepts, out bool skip)
 	{
+		skip = true;
+		// skip these points because time difference is too small
+		if (MathF.Abs(startPoint.Time - endPoint.Time) <= _timeDifferenceThreshold ||
+		    MathF.Abs(startPoint.Time - middlePoint.Time) <= _timeDifferenceThreshold ||
+		    MathF.Abs(middlePoint.Time - endPoint.Time) <= _timeDifferenceThreshold)
+		{
+			return false;
+		}
+
+		// TODO: Yeet, it's sorted by time I'm stupid
+		// skip points if non-linear time
+		// to ignore points where time bounces between pointA and pointC
+		// example: [[0, 0, 0.5], [0, 0.5, 0.3], [0, -1, 0]]
+		// if previous point time is greater than or equal to the 3rd point == if middle point time is lesser than or equal to endPoint time
+		// if ((startPoint.Time >= middlePoint.Time) != (middlePoint.Time >= endPoint.Time))
+		// {
+		// 	return false;
+		// }
+
 		// Skip points where their easing or smoothness is different,
 		// which would allow for middlePoint to cause a non-negligible difference
 		if (endPoint.Easing != middlePoint.Easing || endPoint.Smooth != middlePoint.Smooth)
@@ -124,9 +164,9 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 			return false;
 		}
 
-		// Skip points that are identical
+		// Skip points that are identical with large time differences
 		// used for keyframe pause
-		if (Math.Abs(endPoint.Time - middlePoint.Time) > DIFFERENCE_THRESHOLD && endPoint.Data.AreFloatsSimilar(middlePoint.Data, DIFFERENCE_THRESHOLD))
+		if (Math.Abs(endPoint.Time - middlePoint.Time) > _differenceThreshold && endPoint.Data.AreFloatsSimilar(middlePoint.Data, _differenceThreshold))
 		{
 			return false;
 		}
@@ -152,12 +192,13 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 		// [2,2,2,2,1]
 		// ]}
 
+		skip = false;
 
 		return
 			// The points slope apply on the same Y intercept
-			middleYIntercepts.AreFloatsSimilar(endYIntercepts, Y_INTERCEPT_DIFFERENCE_THRESHOLD) &&
+			middleYIntercepts.AreFloatsSimilar(endYIntercepts, _yInterceptDifferenceThreshold) &&
 			// Both points are identical
-			middleSlope.AreFloatsSimilar(endSlope, DIFFERENCE_THRESHOLD);
+			middleSlope.AreFloatsSimilar(endSlope, _differenceThreshold);
 
 
 	}

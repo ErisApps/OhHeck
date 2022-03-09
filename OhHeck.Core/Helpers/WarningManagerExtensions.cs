@@ -1,4 +1,5 @@
-﻿using OhHeck.Core.Analyzer;
+﻿using System.Collections.Generic;
+using OhHeck.Core.Analyzer;
 using OhHeck.Core.Models.Beatmap;
 
 namespace OhHeck.Core.Helpers;
@@ -6,28 +7,31 @@ namespace OhHeck.Core.Helpers;
 public static class WarningManagerExtensions
 {
 	// Nonnull
-	public static void Analyze(this WarningManager warningManager, IAnalyzable analyzable, IWarningOutput warningOutput) => warningManager.Analyze(analyzable, null, analyzable.GetType(), warningOutput);
-	public static void Analyze(this WarningManager warningManager, IAnalyzable analyzable, IAnalyzable parent, IWarningOutput warningOutput) => warningManager.Analyze(analyzable, parent, analyzable.GetType(), warningOutput);
+	public static ICollection<AnalyzeProcessedData> Analyze(this WarningManager warningManager, IAnalyzable analyzable, ICollection<AnalyzeProcessedData>? analyzeDatas = null) => warningManager.Analyze(analyzable, null, analyzable.GetType(), analyzeDatas);
+	public static ICollection<AnalyzeProcessedData> Analyze(this WarningManager warningManager, IAnalyzable analyzable, IAnalyzable parent, ICollection<AnalyzeProcessedData>? analyzeDatas = null) => warningManager.Analyze(analyzable, parent, analyzable.GetType(), analyzeDatas);
 
-	public static void AnalyzeBeatmap(this WarningManager warningManager, BeatmapSaveData beatmapSaveData, IWarningOutput warningOutput)
+	public static ICollection<AnalyzeProcessedData> AnalyzeBeatmap(this WarningManager warningManager, BeatmapSaveData beatmapSaveData, ICollection<AnalyzeProcessedData>? analyzeDatas = null)
 	{
-		warningManager.Analyze(beatmapSaveData, warningOutput);
+		analyzeDatas ??= new List<AnalyzeProcessedData>();
+
+		warningManager.Analyze(beatmapSaveData, analyzeDatas);
 
 		// We have to iterate the list of types
-		beatmapSaveData.Events.ForEach(x => warningManager.Analyze(x, warningOutput));
-		beatmapSaveData.Notes.ForEach(x => warningManager.Analyze(x, warningOutput));
-		beatmapSaveData.Obstacles.ForEach(x => warningManager.Analyze(x, warningOutput));
+		beatmapSaveData.Events.ForEach(x => warningManager.Analyze(x, analyzeDatas));
+		beatmapSaveData.Notes.ForEach(x => warningManager.Analyze(x, analyzeDatas));
+		beatmapSaveData.Obstacles.ForEach(x => warningManager.Analyze(x, analyzeDatas));
 
 		if (beatmapSaveData.BeatmapCustomData is null)
 		{
-			return;
+			return analyzeDatas;
 		}
 
 		var customData = beatmapSaveData.BeatmapCustomData;
-		warningManager.Analyze(customData, warningOutput);
 
-		customData.CustomEvents?.ForEach(x => warningManager.Analyze(x, warningOutput));
-		customData.EnvironmentEnhancements?.ForEach(x => warningManager.Analyze(x, warningOutput));
-		customData.PointDefinitions?.ForEach(x => warningManager.Analyze(x, warningOutput));
+		customData.CustomEvents?.ForEach(x => warningManager.Analyze(x, analyzeDatas));
+		customData.EnvironmentEnhancements?.ForEach(x => warningManager.Analyze(x, analyzeDatas));
+		customData.PointDefinitions?.ForEach(x => warningManager.Analyze(x, analyzeDatas));
+
+		return analyzeDatas;
 	}
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OhHeck.Core.Analyzer;
+namespace OhHeck.Core.Analyzer.Attributes;
 
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class AnalyzeMemberAttribute : Attribute

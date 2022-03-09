@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 
-namespace OhHeck.Core.Analyzer;
+namespace OhHeck.Core.Analyzer.Attributes;
 
 [AttributeUsage(AttributeTargets.Class)]
 [MeansImplicitUse]
