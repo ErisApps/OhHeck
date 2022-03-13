@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
+using System.Text;
+using System.Text.RegularExpressions;
 using OhHeck.Core.Models.Beatmap.Enums;
 using OhHeck.Core.Models.Beatmap.v2.Enums;
 using OhHeck.Core.Models.beatmap.v3;
@@ -21,6 +22,19 @@ namespace OhHeck.Core.Models.Beatmap;
 [SuppressMessage("ReSharper", "UnusedMember.Local")]
 public class BeatmapJsonHelper
 {
+	// Stolen from SongCore
+	private static readonly Regex VersionRegex = new(
+		@"""_?version""\s*:\s*""(?<version>[0-9]+\.[0-9]+\.?[0-9]?)""",
+		RegexOptions.Compiled | RegexOptions.CultureInvariant
+	);
+
+	public static Version GetVersionRegex(string data)
+	{
+		var truncatedText = data.Length > 50 ? data[..50] : data;
+		var match = VersionRegex.Match(truncatedText);
+		return !match.Success ? FallbackVersion : new Version(match.Groups["version"].Value);
+	}
+
 	public static Version GetVersion(string data)
 	{
 		var text = data[..50];
@@ -50,10 +64,13 @@ public class BeatmapJsonHelper
 			data = newStream;
 		}
 
-		var dummyBeatmap = JsonSerializer.Deserialize<DumbBeatmap>(data);
+		var bytes = new byte[50];
+		data.Read(bytes, 0, 50);
 		data.Seek(0, SeekOrigin.Begin);
 
-		return new Version(dummyBeatmap?.Version2 ?? dummyBeatmap?.Version1 ?? throw new InvalidOperationException("No version found!"));
+		var str = Encoding.UTF8.GetString(bytes);
+
+		return GetVersionRegex(str);
 	}
 
 	public static BeatmapSaveData ConvertBeatmapSaveData(Beatmapv2.BeatmapSaveData beatmapSaveData)
@@ -180,6 +197,7 @@ public class BeatmapJsonHelper
 
 	[SuppressMessage("ReSharper", "InconsistentNaming")]
 	public static readonly Version version2_6_0 = new("2.6.0");
+	private static readonly Version FallbackVersion = new("2.0.0");
 	private const string K_LEGACY_VERSION_SEARCH_STRING = "\"_version\":\"";
 	private const string K_VERSION_SEARCH_STRING = "\"version\":\"";
 }
