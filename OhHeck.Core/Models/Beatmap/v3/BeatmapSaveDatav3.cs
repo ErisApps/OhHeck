@@ -371,6 +371,7 @@ public abstract class EventBoxGroup : BeatmapSaveDataItem
 	[JsonPropertyName("g")]
 	public int GroupId { get; set; }
 
+	[JsonIgnore]
 	public abstract IReadOnlyList<EventBox> BaseEventBoxes { get; }
 
 	public override string GetFriendlyName() => nameof(EventBoxGroup);
@@ -380,8 +381,12 @@ public class EventBoxGroup<T> : EventBoxGroup where T : EventBox
 {
 	public EventBoxGroup(float beat, int groupId, List<T> eventBoxes) : base(beat, groupId) => EventBoxes = eventBoxes;
 
+	[JsonIgnore]
 	public override IReadOnlyList<EventBox> BaseEventBoxes => EventBoxes;
+
+	[JsonPropertyName("e")]
 	public List<T> EventBoxes { get; set; }
+
 	public override string GetFriendlyName() => nameof(EventBoxGroup<T>);
 }
 
