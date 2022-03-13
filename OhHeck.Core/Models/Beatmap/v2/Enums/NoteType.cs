@@ -1,4 +1,4 @@
-namespace OhHeck.Core.Models.Beatmap.Enums;
+namespace OhHeck.Core.Models.Beatmap.v2.Enums;
 
 public enum NoteType
 {

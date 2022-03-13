@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Models.Beatmap;
+using OhHeck.Core.Models.beatmap.v3;
 
 namespace OhHeck.Core.Helpers;
 
@@ -15,22 +16,6 @@ public static class WarningManagerExtensions
 		analyzeDatas ??= new List<AnalyzeProcessedData>();
 
 		warningManager.Analyze(beatmapSaveData, analyzeDatas);
-
-		// We have to iterate the list of types
-		beatmapSaveData.Events.ForEach(x => warningManager.Analyze(x, analyzeDatas));
-		beatmapSaveData.Notes.ForEach(x => warningManager.Analyze(x, analyzeDatas));
-		beatmapSaveData.Obstacles.ForEach(x => warningManager.Analyze(x, analyzeDatas));
-
-		if (beatmapSaveData.BeatmapCustomData is null)
-		{
-			return analyzeDatas;
-		}
-
-		var customData = beatmapSaveData.BeatmapCustomData;
-
-		customData.CustomEvents?.ForEach(x => warningManager.Analyze(x, analyzeDatas));
-		customData.EnvironmentEnhancements?.ForEach(x => warningManager.Analyze(x, analyzeDatas));
-		customData.PointDefinitions?.ForEach(x => warningManager.Analyze(x, analyzeDatas));
 
 		return analyzeDatas;
 	}

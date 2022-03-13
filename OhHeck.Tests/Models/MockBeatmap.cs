@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using OhHeck.Core.Models.Beatmap;
 using OhHeck.Core.Models.Beatmap.Enums;
+using OhHeck.Core.Models.Beatmap.v2;
+using OhHeck.Core.Models.Beatmap.v2.Enums;
 using OhHeck.Core.Models.ModData.Chroma;
 using OhHeck.Core.Models.ModData.Tracks;
 
@@ -36,6 +38,9 @@ public class MockBeatmap : BeatmapSaveData
 		Events,
 		Obstacles,
 		Notes,
+		new List<SliderData>(),
+		new List<WaypointData>(),
+		null,
 		BeatmapCustomData)
 	{
 

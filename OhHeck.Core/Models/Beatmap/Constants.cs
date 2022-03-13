@@ -30,3 +30,9 @@ public static class AnimationProperties
 	// Chroma
 	public const string COLOR = "_color";
 }
+
+public static class JsonKeys
+{
+	public const string CUSTOM_DATA_KEY_V2 = "_customData";
+	public const string CUSTOM_DATA_KEY_V3 = "customData";
+}

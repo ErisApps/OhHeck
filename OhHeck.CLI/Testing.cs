@@ -35,9 +35,9 @@ public static class Testing
 	public static void TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
 	{
 		log.Information("Testing map {Name}", name);
-		var fileStream = File.OpenRead(name);
+		Stream fileStream = File.OpenRead(name);
 
-		var beatmapSaveData = JsonUtils.ParseBeatmap(fileStream, null, out var stopwatch);
+		var beatmapSaveData = BeatmapJsonParser.ParseBeatmap(ref fileStream, null, out var stopwatch);
 
 		log.Information("Parsed beatmap in {Count}ms", stopwatch.ElapsedMilliseconds);
 
@@ -48,7 +48,7 @@ public static class Testing
 		}
 
 		log.Information("Version {Version}", beatmapSaveData.Version);
-		log.Information("Events {Count}", beatmapSaveData.Events.Count);
+		log.Information("Events {Count}", beatmapSaveData.BasicBeatmapEvents.Count);
 		log.Information("Notes {Count}", beatmapSaveData.Notes.Count);
 		log.Information("Obstacles {Count}", beatmapSaveData.Obstacles.Count);
 
