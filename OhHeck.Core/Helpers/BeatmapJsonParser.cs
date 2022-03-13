@@ -4,14 +4,17 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Helpers.Converters;
 using OhHeck.Core.Models.Beatmap;
+using OhHeck.Core.Models.beatmap.v3;
 
 namespace OhHeck.Core.Helpers;
 
-public static class JsonUtils
+public static class BeatmapJsonParser
 {
 
-	public static BeatmapSaveData? ParseBeatmap(Stream stream, JsonSerializerOptions? options, out Stopwatch stopwatch)
+	public static BeatmapSaveData? ParseBeatmap(ref Stream stream, JsonSerializerOptions? options, out Stopwatch stopwatch)
 	{
+		var version = BeatmapJsonHelper.GetVersion(ref stream);
+
 		options ??= new JsonSerializerOptions
 		{
 			IgnoreReadOnlyProperties = false,
@@ -26,10 +29,15 @@ public static class JsonUtils
 		options.ReferenceHandler = pointDefinitionReferenceHandler;
 
 		stopwatch = Stopwatch.StartNew();
-		var beatmapSaveData = JsonSerializer.Deserialize<BeatmapSaveData>(stream, options);
+
+		if (version.CompareTo(BeatmapJsonHelper.version2_6_0) <= 0)
+		{
+			return BeatmapJsonHelper.ConvertBeatmapSaveData(JsonSerializer.Deserialize<Models.Beatmap.v2.BeatmapSaveData>(stream, options)!);
+		}
+		var result = JsonSerializer.Deserialize<BeatmapSaveData>(stream, options);
 		stopwatch.Stop();
 
-		return beatmapSaveData;
+		return result;
 	}
 
 }

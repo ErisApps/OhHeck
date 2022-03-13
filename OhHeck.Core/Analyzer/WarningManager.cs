@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -133,7 +134,7 @@ public class WarningManager
 	}
 
 	// Nullable
-	public ICollection<AnalyzeProcessedData> Analyze(IAnalyzable? analyzable, IAnalyzable? parent, Type type, ICollection<AnalyzeProcessedData>? analyzeDatas = null)
+	public ICollection<AnalyzeProcessedData> Analyze(IAnalyzable? analyzable, IAnalyzable? parentOfAnalyzable, Type typeOfAnalyzable, ICollection<AnalyzeProcessedData>? analyzeDatas = null)
 	{
 		analyzeDatas ??= new List<AnalyzeProcessedData>();
 
@@ -150,7 +151,7 @@ public class WarningManager
 		}
 
 		var friendlyName = analyzable.GetFriendlyName();
-		var memberInfos = GetPublicMembersData(type);
+		var memberInfos = GetPublicMembersData(typeOfAnalyzable);
 
 
 		foreach (var (_, (memberInfo, memberType, friendlyMemberName)) in memberInfos)
@@ -168,8 +169,14 @@ public class WarningManager
 				};
 			}
 
-			var analyzeData = new AnalyzeProcessedData(memberType, memberValue, new WarningContext(friendlyName, friendlyMemberName, parent));
+			var analyzeData = new AnalyzeProcessedData(memberType, memberValue, new WarningContext(friendlyName, friendlyMemberName, parentOfAnalyzable));
 			analyzeDatas.Add(analyzeData);
+
+			// Analyze lists
+			if (memberValue is IEnumerable enumerable)
+			{
+				AnalyzeEnumerable(enumerable, analyzable, analyzeDatas);
+			}
 
 			// If not Analyzable, don't process
 			if (!AnalyzableType.IsAssignableFrom(memberType))
@@ -179,10 +186,24 @@ public class WarningManager
 
 			// Get
 			var fieldValue = (IAnalyzable?) memberValue;
+
 			Analyze(fieldValue, analyzable, memberType, analyzeDatas);
 		}
 
 		return analyzeDatas;
+	}
+
+	private void AnalyzeEnumerable(IEnumerable enumerable, IAnalyzable? parent, ICollection<AnalyzeProcessedData> analyzeDatas)
+	{
+		foreach (var o in enumerable)
+		{
+			if (o is not IAnalyzable analyzable)
+			{
+				continue;
+			}
+
+			Analyze(analyzable, parent, o.GetType(), analyzeDatas);
+		}
 	}
 
 	private static IReadOnlyDictionary<MemberInfo, MemberData> GetPublicMembersData(IReflect type)
