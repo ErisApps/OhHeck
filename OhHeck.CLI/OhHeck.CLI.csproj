@@ -5,7 +5,8 @@
         <TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    </PropertyGroup>
+		<PublishSingleFile>true</PublishSingleFile>
+	</PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.9.0-preview1" />
@@ -15,7 +16,7 @@
 		<ProjectReference Include="..\OhHeck.Core\OhHeck.Core.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
+	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
 	  <None Update="test_maps\SomewhereOutThereEPlus.dat">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
