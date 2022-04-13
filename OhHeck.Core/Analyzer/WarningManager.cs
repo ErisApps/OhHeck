@@ -151,8 +151,31 @@ public class WarningManager
 		}
 
 		var friendlyName = analyzable.GetFriendlyName();
-		var memberInfos = GetPublicMembersData(typeOfAnalyzable);
 
+		var analyzeData = new AnalyzeProcessedData(typeOfAnalyzable, analyzable, new WarningContext("", friendlyName, parentOfAnalyzable));
+		analyzeDatas.Add(analyzeData);
+
+		Analyze_Internal(analyzable, parentOfAnalyzable, typeOfAnalyzable, analyzeDatas);
+
+		return analyzeDatas;
+	}
+
+	private void Analyze_Internal(IAnalyzable? analyzable, IAnalyzable? parentOfAnalyzable, Type typeOfAnalyzable, ICollection<AnalyzeProcessedData> analyzeDatas)
+	{
+		// Early return
+		if (_beatmapAnalyzers.Count == 0)
+		{
+			return;
+		}
+
+		// null means no fields to analyze
+		if (analyzable is null)
+		{
+			return;
+		}
+
+		var friendlyName = analyzable.GetFriendlyName();
+		var memberInfos = GetPublicMembersData(typeOfAnalyzable);
 
 		foreach (var (_, (memberInfo, memberType, friendlyMemberName)) in memberInfos)
 		{
@@ -187,10 +210,8 @@ public class WarningManager
 			// Get
 			var fieldValue = (IAnalyzable?) memberValue;
 
-			Analyze(fieldValue, analyzable, memberType, analyzeDatas);
+			Analyze_Internal(fieldValue, analyzable, memberType, analyzeDatas);
 		}
-
-		return analyzeDatas;
 	}
 
 	private void AnalyzeEnumerable(IEnumerable enumerable, IAnalyzable? parent, ICollection<AnalyzeProcessedData> analyzeDatas)

@@ -10,7 +10,7 @@ public interface IWarningOutput
 	void PushWarningInfo(WarningContext warningContext);
 	void PopWarningInfo();
 
-	void WriteWarning(string message, Type analyzeType);
+	void WriteWarning(string message, Type analyzerType);
 
 	IEnumerable<Warning> GetWarnings();
 }
