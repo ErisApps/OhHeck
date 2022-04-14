@@ -58,8 +58,15 @@ if (opt.Test) {
 	log.Information("");
 	TestMapDefault("SomewhereOutThereEPlus");
 }
-else
+else if (opt.ListWarnings)
 {
+	log.Information("Registered warning lints:");
+	foreach (var (warningName, _) in warningManager.BeatmapAnalyzers)
+	{
+		// TODO: List configuration proerties
+		log.Information("\t{WarningName}", warningName);
+	}
+} else {
 	Testing.TestMap(log, opt.Map, warningManager, maxWarningCount);
 }
 

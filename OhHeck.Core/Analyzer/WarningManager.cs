@@ -18,7 +18,7 @@ public class WarningManager
 	private static readonly Type AnalyzableType = typeof(IAnalyzable);
 
 	[ThreadStatic]
-	private static Dictionary<IReflect, IReadOnlyDictionary<MemberInfo, MemberData>> _cachedAnalyzedFields;
+	private static readonly Dictionary<IReflect, IReadOnlyDictionary<MemberInfo, MemberData>> CachedAnalyzedFields;
 
 	private readonly IContainer _container;
 	private readonly ILogger _logger;
@@ -32,7 +32,9 @@ public class WarningManager
 		_logger = logger;
 	}
 
-	static WarningManager() => _cachedAnalyzedFields = new Dictionary<IReflect, IReadOnlyDictionary<MemberInfo, MemberData>>();
+	public IReadOnlyDictionary<string, IFieldAnalyzer> BeatmapAnalyzers => _beatmapAnalyzers;
+
+	static WarningManager() => CachedAnalyzedFields = new Dictionary<IReflect, IReadOnlyDictionary<MemberInfo, MemberData>>();
 
 	public void Init(IEnumerable<string> suppressedWarnings, IEnumerable<ConfigureWarningValue> configureWarningValues)
 	{
@@ -160,7 +162,7 @@ public class WarningManager
 		return analyzeDatas;
 	}
 
-	private void Analyze_Internal(IAnalyzable? analyzable, IAnalyzable? parentOfAnalyzable, Type typeOfAnalyzable, ICollection<AnalyzeProcessedData> analyzeDatas)
+	private void Analyze_Internal(IAnalyzable? analyzable, IAnalyzable? parentOfAnalyzable, IReflect typeOfAnalyzable, ICollection<AnalyzeProcessedData> analyzeDatas)
 	{
 		// Early return
 		if (_beatmapAnalyzers.Count == 0)
@@ -230,7 +232,7 @@ public class WarningManager
 	private static IReadOnlyDictionary<MemberInfo, MemberData> GetPublicMembersData(IReflect type)
 	{
 		// Double cache lets go!
-		if (_cachedAnalyzedFields.TryGetValue(type, out var cached))
+		if (CachedAnalyzedFields.TryGetValue(type, out var cached))
 		{
 			return cached;
 		}
@@ -258,31 +260,9 @@ public class WarningManager
 			memberValues[memberInfo] = new MemberData(memberInfo, memberType!, friendlyMemberName);
 		}
 
-		_cachedAnalyzedFields[type] = memberValues;
+		CachedAnalyzedFields[type] = memberValues;
 		return memberValues;
 	}
 
 	private record MemberData(MemberInfo MemberInfo, Type MemberType, string FriendlyMemberName);
-	// private readonly struct MemberData
-	// {
-	// 	public readonly object? MemberValue;
-	// 	public readonly Type MemberType;
-	// 	public readonly string FriendlyMemberName;
-	//
-	// 	public MemberData(object? memberValue, Type memberType, string friendlyMemberName)
-	// 	{
-	// 		MemberValue = memberValue;
-	// 		MemberType = memberType;
-	// 		FriendlyMemberName = friendlyMemberName;
-	// 	}
-	//
-	// 	public void Deconstruct(out object? memberValue, out Type memberType, out string friendlyMemberName)
-	// 	{
-	// 		memberValue = MemberValue;
-	// 		memberType = MemberType;
-	// 		friendlyMemberName = FriendlyMemberName;
-	// 	}
-	// }
-
-
 }

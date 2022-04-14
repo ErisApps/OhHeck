@@ -7,9 +7,10 @@ namespace OhHeck.CLI;
 
 public class CLIOptions
 {
-	public CLIOptions(string map, bool test, int warningCount, IEnumerable<string> suppressedWarnings, IEnumerable<string> configureWarningValues)
+	public CLIOptions(string map, bool listWarnings, bool test, int warningCount, IEnumerable<string> suppressedWarnings, IEnumerable<string> configureWarningValues)
 	{
 		Map = map;
+		ListWarnings = listWarnings;
 		Test = test;
 		WarningCount = warningCount;
 		SuppressedWarnings = suppressedWarnings;
@@ -18,6 +19,9 @@ public class CLIOptions
 
 	[Option(SetName = "mapLoad")]
 	public string Map { get; }
+
+	[Option('l',"list", Default = false, SetName = "mapLoad")]
+	public bool ListWarnings { get; }
 
 	[Option(Default = false, SetName = "mapLoad")]
 	public bool Test { get; }
