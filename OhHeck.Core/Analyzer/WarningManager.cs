@@ -136,7 +136,7 @@ public class WarningManager
 	}
 
 	// Nullable
-	public ICollection<AnalyzeProcessedData> Analyze(IAnalyzable? analyzable, IAnalyzable? parentOfAnalyzable, Type typeOfAnalyzable, ICollection<AnalyzeProcessedData>? analyzeDatas = null)
+	public ICollection<AnalyzeProcessedData> Analyze(IAnalyzable analyzable, ICollection<AnalyzeProcessedData>? analyzeDatas = null)
 	{
 		analyzeDatas ??= new List<AnalyzeProcessedData>();
 
@@ -146,23 +146,19 @@ public class WarningManager
 			return analyzeDatas;
 		}
 
-		// null means no fields to analyze
-		if (analyzable is null)
-		{
-			return analyzeDatas;
-		}
-
 		var friendlyName = analyzable.GetFriendlyName();
+		var typeOfAnalyzable = analyzable.GetType();
 
-		var analyzeData = new AnalyzeProcessedData(typeOfAnalyzable, analyzable, new WarningContext("", friendlyName, parentOfAnalyzable));
+		var analyzeData = new AnalyzeProcessedData(typeOfAnalyzable, analyzable, new WarningContext(friendlyName, analyzable, null));
 		analyzeDatas.Add(analyzeData);
 
-		Analyze_Internal(analyzable, parentOfAnalyzable, typeOfAnalyzable, analyzeDatas);
+		// Recursively add fields/properties
+		Analyze_Internal(analyzable, typeOfAnalyzable, analyzeDatas, analyzeData.WarningContext);
 
 		return analyzeDatas;
 	}
 
-	private void Analyze_Internal(IAnalyzable? analyzable, IAnalyzable? parentOfAnalyzable, IReflect typeOfAnalyzable, ICollection<AnalyzeProcessedData> analyzeDatas)
+	private void Analyze_Internal(IAnalyzable analyzable, IReflect typeOfAnalyzable, ICollection<AnalyzeProcessedData> analyzeDatas, WarningContext? parentContext)
 	{
 		// Early return
 		if (_beatmapAnalyzers.Count == 0)
@@ -170,13 +166,6 @@ public class WarningManager
 			return;
 		}
 
-		// null means no fields to analyze
-		if (analyzable is null)
-		{
-			return;
-		}
-
-		var friendlyName = analyzable.GetFriendlyName();
 		var memberInfos = GetPublicMembersData(typeOfAnalyzable);
 
 		foreach (var (_, (memberInfo, memberType, friendlyMemberName)) in memberInfos)
@@ -184,23 +173,21 @@ public class WarningManager
 			// TODO: Field accessor?
 			//get member value
 			object? memberValue = null;
-			if (analyzable is not null)
+			memberValue = memberInfo switch
 			{
-				memberValue = memberInfo switch
-				{
-					PropertyInfo propertyInfo => propertyInfo.GetValue(analyzable),
-					FieldInfo fieldInfo => fieldInfo.GetValue(analyzable),
-					_ => memberValue
-				};
-			}
+				PropertyInfo propertyInfo => propertyInfo.GetValue(analyzable),
+				FieldInfo fieldInfo => fieldInfo.GetValue(analyzable),
+				_ => memberValue
+			};
 
-			var analyzeData = new AnalyzeProcessedData(memberType, memberValue, new WarningContext(friendlyName, friendlyMemberName, parentOfAnalyzable));
+
+			var analyzeData = new AnalyzeProcessedData(memberType, memberValue, new WarningContext(friendlyMemberName, analyzable, parentContext));
 			analyzeDatas.Add(analyzeData);
 
 			// Analyze lists
 			if (memberValue is IEnumerable enumerable)
 			{
-				AnalyzeEnumerable(enumerable, analyzable, analyzeDatas);
+				AnalyzeEnumerable(enumerable, analyzeDatas, analyzeData.WarningContext);
 			}
 
 			// If not Analyzable, don't process
@@ -212,11 +199,16 @@ public class WarningManager
 			// Get
 			var fieldValue = (IAnalyzable?) memberValue;
 
-			Analyze_Internal(fieldValue, analyzable, memberType, analyzeDatas);
+			if (fieldValue is null)
+			{
+				continue;
+			}
+
+			Analyze_Internal(fieldValue, memberType, analyzeDatas, analyzeData.WarningContext);
 		}
 	}
 
-	private void AnalyzeEnumerable(IEnumerable enumerable, IAnalyzable? parent, ICollection<AnalyzeProcessedData> analyzeDatas)
+	private void AnalyzeEnumerable(IEnumerable enumerable, ICollection<AnalyzeProcessedData> analyzeDatas, WarningContext? parent)
 	{
 		foreach (var o in enumerable)
 		{
@@ -225,7 +217,7 @@ public class WarningManager
 				continue;
 			}
 
-			Analyze(analyzable, parent, o.GetType(), analyzeDatas);
+			Analyze_Internal(analyzable, o.GetType(), analyzeDatas, parent);
 		}
 	}
 

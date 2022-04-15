@@ -27,7 +27,7 @@ public static class Testing
 			{
 				// Throw with information
 				throw new AggregateException(
-					$"Caught an exception on field {analyzeProcessedData.WarningContext.Parent} {analyzeProcessedData.WarningContext.Type}:{analyzeProcessedData.WarningContext.MemberLocation}", e);
+					$"Caught an exception on field {analyzeProcessedData.WarningContext.DeclaringInstance.GetType()} {analyzeProcessedData.WarningContext.MemberName}:{analyzeProcessedData.WarningContext.MemberName}", e);
 			}
 		}
 	}
@@ -92,11 +92,16 @@ public static class Testing
 				break;
 			}
 
-			var (type, memberLocation, parent) = warningInfo;
-			log.Warning("Warning [{AnalyzerName}]: {Type}:{{{MemberLocation}}} {Message}", analyzerName, type, memberLocation, message);
+			var (memberName, instance, parent) = warningInfo;
+			log.Warning("Warning [{AnalyzerName}]: {Type}:{{{MemberName}}} {Message}", analyzerName, instance.GetFriendlyName(), memberName, message);
+			if (instance.ExtraData() is not null)
+			{
+				log.Warning("Extra data: {ExtraData}", instance.ExtraData());
+			}
+
 			if (parent is not null)
 			{
-				log.Warning("Parent {FriendlyName} {ExtraData}", parent.GetFriendlyName(), parent.ExtraData());
+				log.Warning("Parent {FriendlyName} {ExtraData}", parent.DeclaringInstance.GetFriendlyName(), parent.DeclaringInstance.ExtraData() ?? "");
 			}
 
 			log.Warning("");

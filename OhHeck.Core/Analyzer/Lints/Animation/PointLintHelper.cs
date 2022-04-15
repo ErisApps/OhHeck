@@ -28,10 +28,9 @@ public static class PointLintHelper
 					continue;
 				}
 
-				var friendlyName = beatmapCustomEvent.GetFriendlyName();
+				var (memberName, _, warningContext) = warningOutput.GetCurrentWarningInfo();
 
-
-				warningOutput.PushWarningInfo(new WarningContext(friendlyName, warningOutput.GetCurrentWarningInfo().MemberLocation, warningOutput.GetCurrentWarningInfo().Parent));
+				warningOutput.PushWarningInfo(new WarningContext(memberName, beatmapCustomEvent, warningContext));
 				// pass in warningOutput to avoid allocation moment
 				analyzeFn(PointHelper.GetPointDataDictionary(animateEvent.PointProperties)!, @this, warningOutput);
 				warningOutput.PopWarningInfo();
