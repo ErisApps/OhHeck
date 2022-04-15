@@ -12,7 +12,7 @@ public class StringBoolAnalyzer : IFieldAnalyzer {
 	{
 		if (value is FakeTruthy fakeTruthy && fakeTruthy.IsString())
 		{
-			outerWarningOutput.WriteWarning($"Boolean is string: \"{fakeTruthy}\"", GetType());
+			outerWarningOutput.WriteWarning("Boolean is string: \"{FakeTruthy}\"", GetType(), fakeTruthy);
 		}
 	}
 }

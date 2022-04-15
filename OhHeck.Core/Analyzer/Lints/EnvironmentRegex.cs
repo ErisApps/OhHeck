@@ -24,7 +24,7 @@ public class EnvironmentRegex : IFieldAnalyzer {
 		{
 			if (!RegexBindings.IsRegexValid(regex, out var message))
 			{
-				outerWarningOutput.WriteWarning($"{regex} is invalid: {message}", GetType());
+				outerWarningOutput.WriteWarning("{Regex} is invalid: {Message}", GetType(), regex, message);
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Serilog.Core;
 
 namespace OhHeck.Core.Analyzer;
 
@@ -10,7 +11,8 @@ public interface IWarningOutput
 	void PushWarningInfo(WarningContext warningContext);
 	void PopWarningInfo();
 
-	void WriteWarning(string message, Type analyzerType);
+	[MessageTemplateFormatMethod("message")]
+	void WriteWarning(string message, Type analyzeType, params object?[]? formatArgs);
 
 	IEnumerable<Warning> GetWarnings();
 }

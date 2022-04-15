@@ -22,7 +22,7 @@ public class EndsWithRegexLookup : IFieldAnalyzer
 		         select environmentEnhancement.Id into regex
 		         where regex.EndsWith("$") select regex)
 		{
-			outerWarningOutput.WriteWarning($"Using $ at the end of a regex lookup. Consider using EndsWith lookup instead. Regex: {regex}", GetType());
+			outerWarningOutput.WriteWarning("Using $ at the end of a regex lookup. Consider using EndsWith lookup instead. Regex: {Regex}", GetType(), regex);
 		}
 	}
 }

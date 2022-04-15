@@ -15,7 +15,7 @@ public class WarningOutput : IWarningOutput
 
 	public void PopWarningInfo() => _contexts.Pop();
 
-	public void WriteWarning(string message, Type analyzerType) => _warningOutput.Add(new Warning(message, _contexts.Peek(), analyzerType));
+	public void WriteWarning(string message, Type analyzerType, params object?[]? formatArgs) => _warningOutput.Add(new Warning(message, _contexts.Peek(), analyzerType, formatArgs?.Length is null or 0 ? null : formatArgs));
 
 	public IEnumerable<Warning> GetWarnings() => _warningOutput;
 }

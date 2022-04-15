@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Helpers.Enumerable;
+using OhHeck.Core.Models.ModData.Tracks;
 
 namespace OhHeck.Core.Analyzer.Lints.Animation;
 
@@ -58,29 +60,59 @@ public class SimilarPointData : IFieldAnalyzer {
 					// [2,2,2,2,1]
 					// ]}
 
-					// Both points are identical
-					if (prevPoint.Data.AreFloatsSimilar(point.Data, self._differenceThreshold)
-					    &&
-						    // time difference is small
-						    leftMiddleTimeDifference <= self._timeDifferenceThreshold
+
+					if (self.PointSimilar(prevPoint, point)
+
 					    // if no point after this
 					    // or if the next point datas are similar to the middle, which makes the middle redundant
-					    && (nextPoint is null || nextPoint.Data.AreFloatsSimilar(point.Data, self._differenceThreshold))
+					    && (nextPoint is null || self.PointSimilar(point, nextPoint))
 					   )
 					{
-						var message = $"Point data {s} are too similar relative to the time difference {self._differenceThreshold}: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
-						              $"Point2: {point.Data.ArrayToString()}:{point.Time}";
+
+
+						const string message = "Point data {s} are too similar relative to the time difference {differenceThreshold}: Point1 {prevPointData}:{prevPointTime} " +
+						              "Point2: {P2}:{P2t}";
+						const string message2 = message + "Point3: {nextPoint}:{nextPointTime}";
 
 						if (nextPoint is not null)
 						{
-							message += $" Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
+							var args = new object[]
+							{
+								s,
+								self._differenceThreshold.ToString(CultureInfo.InvariantCulture),
+								prevPoint.Data,
+								prevPoint.Time.ToString(CultureInfo.InvariantCulture),
+								point.Data,
+								point.Time.ToString(CultureInfo.InvariantCulture),
+								nextPoint.Data,
+								nextPoint.Time.ToString(CultureInfo.InvariantCulture)
+							};
+							warningOutput.WriteWarning(message2, self.GetType(), args.ToArray());
 						}
+						else
+						{
+							var args = new object[]
+							{
+								s,
+								self._differenceThreshold.ToString(CultureInfo.InvariantCulture),
+								prevPoint.Data,
+								prevPoint.Time.ToString(CultureInfo.InvariantCulture),
+								point.Data,
+								point.Time.ToString(CultureInfo.InvariantCulture)
+							};
 
-						warningOutput.WriteWarning(message, self.GetType());
+							warningOutput.WriteWarning(message, self.GetType(), args.ToArray());
+						}
 					}
 
 					prevPoint = point;
 				}
 			}
 		});
+
+	private bool PointSimilar(PointData a, PointData b) =>
+		// Both points are identical
+		a.Data.AreFloatsSimilar(b.Data, _differenceThreshold)
+		// time difference is small
+		&& Math.Abs(a.Time - b.Time) <= _timeDifferenceThreshold;
 }

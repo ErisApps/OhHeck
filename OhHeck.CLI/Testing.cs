@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Analyzer.Implementation;
 using OhHeck.Core.Helpers;
+using OhHeck.Core.Helpers.Enumerable;
 using Serilog.Core;
+using Serilog.Parsing;
 
 namespace OhHeck.CLI;
 
@@ -30,6 +34,43 @@ public static class Testing
 					$"Caught an exception on field {analyzeProcessedData.WarningContext.DeclaringInstance.GetType()} {analyzeProcessedData.WarningContext.MemberName}:{analyzeProcessedData.WarningContext.MemberName}", e);
 			}
 		}
+	}
+
+	private static string FormatString(string message, IReadOnlyList<object?>? formatParams)
+	{
+		string messageFormatted;
+		if (formatParams is not null && formatParams.Count != 0)
+		{
+			var stringBuilder = new StringBuilder(message.Length);
+			var parser = new MessageTemplateParser();
+
+			var template = parser.Parse(message);
+
+			var index = 0;
+			foreach (var tok in template.Tokens)
+			{
+				object s = tok;
+				if (tok is not TextToken)
+				{
+					s = formatParams[index++] ?? "null";
+
+					if (s is IEnumerable enumerable and not string)
+					{
+						s = enumerable.ArrayToString();
+					}
+				}
+
+				stringBuilder.Append(s);
+			}
+
+			messageFormatted = stringBuilder.ToString();
+		}
+		else
+		{
+			messageFormatted = message;
+		}
+
+		return messageFormatted;
 	}
 
 	public static void TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
@@ -79,7 +120,7 @@ public static class Testing
 
 		var warningCount = 0;
 		var analyzerNameDictionary = new Dictionary<Type, string>();
-		foreach (var (message, warningInfo, analyzerType) in warningOutput.GetWarnings())
+		foreach (var (message, warningInfo, analyzerType, formatParams) in warningOutput.GetWarnings())
 		{
 			if (!analyzerNameDictionary.TryGetValue(analyzerType, out var analyzerName))
 			{
@@ -93,12 +134,12 @@ public static class Testing
 			}
 
 			var (memberName, instance, parent) = warningInfo;
-			log.Warning("Warning [{AnalyzerName}]: {Type}:{{{MemberName}}} {Message}", analyzerName, instance.GetFriendlyName(), memberName, message);
+			var messageFormatted = FormatString(message, formatParams);
+			log.Warning("Warning [{AnalyzerName}]: {Type}:{{{MemberName}}} {MessageFormatted}", analyzerName, instance.GetFriendlyName(), memberName, messageFormatted);
 			if (instance.ExtraData() is not null)
 			{
 				log.Warning("Extra data: {ExtraData}", instance.ExtraData());
 			}
-
 			if (parent is not null)
 			{
 				log.Warning("Parent {FriendlyName} {ExtraData}", parent.DeclaringInstance.GetFriendlyName(), parent.DeclaringInstance.ExtraData() ?? "");

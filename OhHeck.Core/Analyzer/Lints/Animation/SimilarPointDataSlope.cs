@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Helpers.Enumerable;
@@ -115,10 +116,15 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 		});
 
 	private void WriteWarning(IWarningOutput warningOutput, string s, PointData startPoint, PointData middlePoint, IEnumerable<float> middleSlope, PointData endPoint) =>
-		warningOutput.WriteWarning($"Point data {s} slope and y intercept are closely intercepting and match easing/smooth {_differenceThreshold} slope ({middleSlope.ArrayToString()}): " +
-		                           $"Point1 {startPoint.Data.ArrayToString()}:{startPoint.Time} " +
-		                           $"Point2: {middlePoint.Data.ArrayToString()}:{middlePoint.Time} " +
-		                           $"Point3: {endPoint.Data.ArrayToString()}:{endPoint.Time}", typeof(SimilarPointDataSlope));
+		warningOutput.WriteWarning("Point data {S} slope and y intercept are closely intercepting and match easing/smooth {DifferenceThreshold} slope ({MiddleSlope}): " +
+		                           "Point1 {P1}:{P1T} " +
+		                           "Point2: {P2}:{P2T} " +
+		                           "Point3: {P3}:{P3T}", typeof(SimilarPointDataSlope),
+			s, _differenceThreshold.ToString(CultureInfo.InvariantCulture), middleSlope,
+			startPoint.Data, startPoint.Time.ToString(CultureInfo.InvariantCulture),
+			middlePoint.Data, middlePoint.Time.ToString(CultureInfo.InvariantCulture),
+			endPoint.Data, endPoint.Time.ToString(CultureInfo.InvariantCulture)
+			);
 
 	/// <summary>
 	///
@@ -130,6 +136,7 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 	/// <param name="endSlope"></param>
 	/// <param name="middleYIntercepts"></param>
 	/// <param name="endYIntercepts"></param>
+	/// <param name="skip"></param>
 	/// <returns>true if similar</returns>
 	private bool ComparePoints(PointData startPoint, PointData middlePoint, PointData endPoint, in float[] middleSlope, in float[] endSlope, in float[] middleYIntercepts, in float[] endYIntercepts, out bool skip)
 	{

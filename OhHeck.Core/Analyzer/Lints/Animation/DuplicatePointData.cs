@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Helpers.Enumerable;
@@ -38,18 +39,29 @@ public class DuplicatePointData : IFieldAnalyzer {
 					// or left, middle and right are identical
 					if (prevPoint.Data.AreArrayElementsIdentical(point.Data) && (nextPoint is null || nextPoint.Data.AreArrayElementsIdentical(point.Data)))
 					{
-						var message = $"Point data {s} are identical: Point1 {prevPoint.Data.ArrayToString()}:{prevPoint.Time} " +
-						              $"Point2: {point.Data.ArrayToString()}:{point.Time}";
+						const string message = "Point data {S} are identical: Point1 {P1}:{P1T} " +
+						              "Point2: {P2}:{P2T}";
+						const string nextPointMsg = message + " Point3: {P3}:{P3T}";
 
 						if (nextPoint is not null)
 						{
-							message += $" Point3: {nextPoint.Data.ArrayToString()}:{nextPoint.Time}";
+							var args = new object[] {
+								s,
+								prevPoint.Data, prevPoint.Time.ToString(CultureInfo.InvariantCulture), point.Data,
+								point.Time.ToString(CultureInfo.InvariantCulture),
+								nextPoint.Data,
+								nextPoint.Time.ToString(CultureInfo.InvariantCulture)
+							};
+
+							warningOutput.WriteWarning(nextPointMsg, self.GetType(), args.ToArray());
 						}
+						else
+						{
+							var args = new object[] { s, prevPoint.Data, prevPoint.Time.ToString(CultureInfo.InvariantCulture), point.Data, point.Time.ToString(CultureInfo.InvariantCulture) };
 
-						warningOutput.WriteWarning(message, self.GetType());
+							warningOutput.WriteWarning(message, self.GetType(), args.ToArray());
+						}
 					}
-
-
 
 					prevPoint = point;
 				}
