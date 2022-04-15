@@ -8,9 +8,6 @@ namespace OhHeck.Core.Helpers;
 public static class WarningManagerExtensions
 {
 	// Nonnull
-	public static ICollection<AnalyzeProcessedData> Analyze(this WarningManager warningManager, IAnalyzable analyzable, ICollection<AnalyzeProcessedData>? analyzeDatas = null) => warningManager.Analyze(analyzable, null, analyzable.GetType(), analyzeDatas);
-	public static ICollection<AnalyzeProcessedData> Analyze(this WarningManager warningManager, IAnalyzable analyzable, IAnalyzable parent, ICollection<AnalyzeProcessedData>? analyzeDatas = null) => warningManager.Analyze(analyzable, parent, analyzable.GetType(), analyzeDatas);
-
 	public static ICollection<AnalyzeProcessedData> AnalyzeBeatmap(this WarningManager warningManager, BeatmapSaveData beatmapSaveData, ICollection<AnalyzeProcessedData>? analyzeDatas = null)
 	{
 		analyzeDatas ??= new List<AnalyzeProcessedData>();

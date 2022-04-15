@@ -18,7 +18,7 @@ public class WarningManager
 	private static readonly Type AnalyzableType = typeof(IAnalyzable);
 
 	[ThreadStatic]
-	private static Dictionary<IReflect, IReadOnlyDictionary<MemberInfo, MemberData>> _cachedAnalyzedFields;
+	private static readonly Dictionary<IReflect, IReadOnlyDictionary<MemberInfo, MemberData>> CachedAnalyzedFields;
 
 	private readonly IContainer _container;
 	private readonly ILogger _logger;
@@ -32,7 +32,9 @@ public class WarningManager
 		_logger = logger;
 	}
 
-	static WarningManager() => _cachedAnalyzedFields = new Dictionary<IReflect, IReadOnlyDictionary<MemberInfo, MemberData>>();
+	public IReadOnlyDictionary<string, IFieldAnalyzer> BeatmapAnalyzers => _beatmapAnalyzers;
+
+	static WarningManager() => CachedAnalyzedFields = new Dictionary<IReflect, IReadOnlyDictionary<MemberInfo, MemberData>>();
 
 	public void Init(IEnumerable<string> suppressedWarnings, IEnumerable<ConfigureWarningValue> configureWarningValues)
 	{
@@ -134,7 +136,7 @@ public class WarningManager
 	}
 
 	// Nullable
-	public ICollection<AnalyzeProcessedData> Analyze(IAnalyzable? analyzable, IAnalyzable? parentOfAnalyzable, Type typeOfAnalyzable, ICollection<AnalyzeProcessedData>? analyzeDatas = null)
+	public ICollection<AnalyzeProcessedData> Analyze(IAnalyzable analyzable, ICollection<AnalyzeProcessedData>? analyzeDatas = null)
 	{
 		analyzeDatas ??= new List<AnalyzeProcessedData>();
 
@@ -144,38 +146,48 @@ public class WarningManager
 			return analyzeDatas;
 		}
 
-		// null means no fields to analyze
-		if (analyzable is null)
+		var friendlyName = analyzable.GetFriendlyName();
+		var typeOfAnalyzable = analyzable.GetType();
+
+		var analyzeData = new AnalyzeProcessedData(typeOfAnalyzable, analyzable, new WarningContext(friendlyName, analyzable, null));
+		analyzeDatas.Add(analyzeData);
+
+		// Recursively add fields/properties
+		Analyze_Internal(analyzable, typeOfAnalyzable, analyzeDatas, analyzeData.WarningContext);
+
+		return analyzeDatas;
+	}
+
+	private void Analyze_Internal(IAnalyzable analyzable, IReflect typeOfAnalyzable, ICollection<AnalyzeProcessedData> analyzeDatas, WarningContext? parentContext)
+	{
+		// Early return
+		if (_beatmapAnalyzers.Count == 0)
 		{
-			return analyzeDatas;
+			return;
 		}
 
-		var friendlyName = analyzable.GetFriendlyName();
 		var memberInfos = GetPublicMembersData(typeOfAnalyzable);
-
 
 		foreach (var (_, (memberInfo, memberType, friendlyMemberName)) in memberInfos)
 		{
 			// TODO: Field accessor?
 			//get member value
 			object? memberValue = null;
-			if (analyzable is not null)
+			memberValue = memberInfo switch
 			{
-				memberValue = memberInfo switch
-				{
-					PropertyInfo propertyInfo => propertyInfo.GetValue(analyzable),
-					FieldInfo fieldInfo => fieldInfo.GetValue(analyzable),
-					_ => memberValue
-				};
-			}
+				PropertyInfo propertyInfo => propertyInfo.GetValue(analyzable),
+				FieldInfo fieldInfo => fieldInfo.GetValue(analyzable),
+				_ => memberValue
+			};
 
-			var analyzeData = new AnalyzeProcessedData(memberType, memberValue, new WarningContext(friendlyName, friendlyMemberName, parentOfAnalyzable));
+
+			var analyzeData = new AnalyzeProcessedData(memberType, memberValue, new WarningContext(friendlyMemberName, analyzable, parentContext));
 			analyzeDatas.Add(analyzeData);
 
 			// Analyze lists
 			if (memberValue is IEnumerable enumerable)
 			{
-				AnalyzeEnumerable(enumerable, analyzable, analyzeDatas);
+				AnalyzeEnumerable(enumerable, analyzeDatas, analyzeData.WarningContext);
 			}
 
 			// If not Analyzable, don't process
@@ -187,13 +199,16 @@ public class WarningManager
 			// Get
 			var fieldValue = (IAnalyzable?) memberValue;
 
-			Analyze(fieldValue, analyzable, memberType, analyzeDatas);
-		}
+			if (fieldValue is null)
+			{
+				continue;
+			}
 
-		return analyzeDatas;
+			Analyze_Internal(fieldValue, memberType, analyzeDatas, analyzeData.WarningContext);
+		}
 	}
 
-	private void AnalyzeEnumerable(IEnumerable enumerable, IAnalyzable? parent, ICollection<AnalyzeProcessedData> analyzeDatas)
+	private void AnalyzeEnumerable(IEnumerable enumerable, ICollection<AnalyzeProcessedData> analyzeDatas, WarningContext? parent)
 	{
 		foreach (var o in enumerable)
 		{
@@ -202,14 +217,14 @@ public class WarningManager
 				continue;
 			}
 
-			Analyze(analyzable, parent, o.GetType(), analyzeDatas);
+			Analyze_Internal(analyzable, o.GetType(), analyzeDatas, parent);
 		}
 	}
 
 	private static IReadOnlyDictionary<MemberInfo, MemberData> GetPublicMembersData(IReflect type)
 	{
 		// Double cache lets go!
-		if (_cachedAnalyzedFields.TryGetValue(type, out var cached))
+		if (CachedAnalyzedFields.TryGetValue(type, out var cached))
 		{
 			return cached;
 		}
@@ -237,31 +252,9 @@ public class WarningManager
 			memberValues[memberInfo] = new MemberData(memberInfo, memberType!, friendlyMemberName);
 		}
 
-		_cachedAnalyzedFields[type] = memberValues;
+		CachedAnalyzedFields[type] = memberValues;
 		return memberValues;
 	}
 
 	private record MemberData(MemberInfo MemberInfo, Type MemberType, string FriendlyMemberName);
-	// private readonly struct MemberData
-	// {
-	// 	public readonly object? MemberValue;
-	// 	public readonly Type MemberType;
-	// 	public readonly string FriendlyMemberName;
-	//
-	// 	public MemberData(object? memberValue, Type memberType, string friendlyMemberName)
-	// 	{
-	// 		MemberValue = memberValue;
-	// 		MemberType = memberType;
-	// 		FriendlyMemberName = friendlyMemberName;
-	// 	}
-	//
-	// 	public void Deconstruct(out object? memberValue, out Type memberType, out string friendlyMemberName)
-	// 	{
-	// 		memberValue = MemberValue;
-	// 		memberType = MemberType;
-	// 		friendlyMemberName = FriendlyMemberName;
-	// 	}
-	// }
-
-
 }

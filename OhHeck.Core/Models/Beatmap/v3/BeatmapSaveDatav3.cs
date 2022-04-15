@@ -11,8 +11,12 @@ using OhHeck.Core.Models.Beatmap.v3.Enums;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace OhHeck.Core.Models.beatmap.v3;
+
+// TODO: Binary bool converter
 
 public class BeatmapSaveData : IAnalyzable
 {
@@ -106,6 +110,7 @@ public abstract class BeatmapSaveDataItem : IAnalyzable, IComparable<BeatmapSave
 	}
 }
 
+#region Events
 public class BasicEventData : BeatmapSaveDataItem
 {
 	[JsonPropertyName("et")]
@@ -236,7 +241,14 @@ public class IndexFilter
 	public int Param1 { get; set; }
 
 	[JsonPropertyName("r")]
-	public bool Reversed { get; set; }
+	public int ReversedInt { get; set; }
+
+	[JsonIgnore]
+	public bool Reversed
+	{
+		get => ReversedInt != 0;
+		set => ReversedInt = value ? 1 : 0;
+	}
 
 	public enum IndexFilterType
 	{
@@ -254,7 +266,14 @@ public class LightColorEventBox : EventBox
 	public DistributionParamType BrightnessDistributionParamType { get; set; }
 
 	[JsonPropertyName("b")]
-	public bool BrightnessDistributionShouldAffectFirstBaseEvent { get; set; }
+	public int BrightnessDistributionShouldAffectFirstBaseEventInt { get; set; }
+
+	[JsonIgnore]
+	public bool BrightnessDistributionShouldAffectFirstBaseEvent {
+		get => BrightnessDistributionShouldAffectFirstBaseEventInt == 1;
+		set => BrightnessDistributionShouldAffectFirstBaseEventInt = value ? 1 : 0;
+	}
+
 
 	[JsonPropertyName("e")]
 	public List<LightColorBaseData> LightColorBaseDataList { get; set; }
@@ -309,10 +328,23 @@ public class LightRotationEventBox : EventBox
 	public Axis Axis { get; set; }
 
 	[JsonPropertyName("r")]
-	public bool FlipRotation { get; set; }
+	public int FlipRotationInt { get; set; }
+
+	[JsonIgnore]
+	public bool FlipRotation {
+		get => FlipRotationInt == 1;
+		set => FlipRotationInt = value ? 1 : 0;
+	}
 
 	[JsonPropertyName("b")]
-	public bool RotationDistributionShouldAffectFirstBaseEvent { get; set; }
+	public int RotationDistributionShouldAffectFirstBaseEventInt { get; set; }
+
+	[JsonIgnore]
+	public bool RotationDistributionShouldAffectFirstBaseEvent {
+		get => RotationDistributionShouldAffectFirstBaseEventInt == 1;
+		set => RotationDistributionShouldAffectFirstBaseEventInt = value ? 1 : 0;
+	}
+
 
 	[JsonPropertyName("l")]
 	public List<LightRotationBaseData> LightRotationBaseDataList { get; set; }
@@ -347,6 +379,16 @@ public class LightRotationBaseData
 	[JsonPropertyName("o")]
 	public RotationDirection Direction { get; set; }
 
+	[JsonPropertyName("p")]
+	public int UsePreviousEventRotationValueInt { get; set; }
+
+	[JsonIgnore]
+	public bool UsePreviousEventRotationValue
+	{
+		get => UsePreviousEventRotationValueInt == 1;
+		set => UsePreviousEventRotationValueInt = value ? 1 : 0;
+	}
+
 	public enum RotationDirection
 	{
 		Automatic,
@@ -371,6 +413,7 @@ public abstract class EventBoxGroup : BeatmapSaveDataItem
 	[JsonPropertyName("g")]
 	public int GroupId { get; set; }
 
+	[JsonIgnore]
 	public abstract IReadOnlyList<EventBox> BaseEventBoxes { get; }
 
 	public override string GetFriendlyName() => nameof(EventBoxGroup);
@@ -380,8 +423,12 @@ public class EventBoxGroup<T> : EventBoxGroup where T : EventBox
 {
 	public EventBoxGroup(float beat, int groupId, List<T> eventBoxes) : base(beat, groupId) => EventBoxes = eventBoxes;
 
+	[JsonIgnore]
 	public override IReadOnlyList<EventBox> BaseEventBoxes => EventBoxes;
+
+	[JsonPropertyName("e")]
 	public List<T> EventBoxes { get; set; }
+
 	public override string GetFriendlyName() => nameof(EventBoxGroup<T>);
 }
 
@@ -398,6 +445,8 @@ public class LightRotationEventBoxGroup : EventBoxGroup<LightRotationEventBox>
 	{
 	}
 }
+
+#endregion
 
 public class ColorNoteData : BeatmapSaveDataItem
 {
@@ -495,12 +544,12 @@ public abstract class BaseSliderData : BeatmapSaveDataItem
 	public float TailBeat { get; set; }
 
 	[JsonPropertyName("tx")]
-	public float TailLine { get; set; }
+	public int TailLine { get; set; }
 
 	[JsonPropertyName("ty")]
-	public float TailLayer { get; set; }
+	public int TailLayer { get; set; }
 
-	protected BaseSliderData(float beat, NoteColorType colorType, int headLine, int headLayer, NoteCutDirection headCutDirection, float tailBeat, float tailLine, float tailLayer) : base(beat)
+	protected BaseSliderData(float beat, NoteColorType colorType, int headLine, int headLayer, NoteCutDirection headCutDirection, float tailBeat, int tailLine, int tailLayer) : base(beat)
 	{
 		ColorType = colorType;
 		HeadLine = headLine;
@@ -526,6 +575,7 @@ public class SliderData : BaseSliderData
 	[JsonPropertyName("m")]
 	public SliderMidAnchorMode SliderMidAnchorMode { get; set; }
 
+
 	public SliderData(float beat, NoteColorType colorType, int headLine, int headLayer, float headControlPointLengthMultiplier, NoteCutDirection headCutDirection, float tailBeat, int tailLine, int tailLayer, float tailControlPointLengthMultiplier, NoteCutDirection tailCutDirection, SliderMidAnchorMode sliderMidAnchorMode) : base(beat, colorType, headLine, headLayer, headCutDirection, tailBeat, tailLine, tailLayer)
 	{
 		HeadControlPointLengthMultiplier = headControlPointLengthMultiplier;
@@ -545,7 +595,7 @@ public class BurstSliderData : BaseSliderData
 	[JsonPropertyName("s")]
 	public float SquishAmount { get; set; }
 
-	public BurstSliderData(float beat, NoteColorType colorType, int headLine, int headLayer, NoteCutDirection headCutDirection, float tailBeat, float tailLine, float tailLayer, int sliceCount, float squishAmount) : base(beat, colorType, headLine, headLayer, headCutDirection, tailBeat, tailLine, tailLayer)
+	public BurstSliderData(float beat, NoteColorType colorType, int headLine, int headLayer, NoteCutDirection headCutDirection, float tailBeat, int tailLine, int tailLayer, int sliceCount, float squishAmount) : base(beat, colorType, headLine, headLayer, headCutDirection, tailBeat, tailLine, tailLayer)
 	{
 		SliceCount = sliceCount;
 		SquishAmount = squishAmount;
