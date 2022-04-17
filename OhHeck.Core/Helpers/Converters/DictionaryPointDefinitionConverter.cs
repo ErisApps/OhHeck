@@ -8,18 +8,17 @@ namespace OhHeck.Core.Helpers.Converters;
 
 // Parses a dictionary of property -> PointDefinitionData
 // for example being "_position": "somePointDefinition" or "_rotation": [5, 2, 3]
-public class DictionaryPointDefinitionConverter : JsonConverter<Dictionary<string, PointDefinitionData>>
+public class DictionaryPointDefinitionConverter : JsonConverter<Dictionary<string, PointDefinitionDataProxy>>
 {
-	public override Dictionary<string, PointDefinitionData> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+	public override Dictionary<string, PointDefinitionDataProxy> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 	{
 		if (reader.TokenType != JsonTokenType.StartObject)
 		{
 			throw new JsonException();
 		}
 
-		var resolver = (PointDefinitionReferenceResolver) options.ReferenceHandler!.CreateResolver();
 		var pointDataListConverter = new PointDataListConverter();
-		Dictionary<string, PointDefinitionData> pointDefinitionDatas = new();
+		Dictionary<string, PointDefinitionDataProxy> pointDefinitionDatas = new();
 
 		while (reader.Read())
 		{
@@ -41,7 +40,7 @@ public class DictionaryPointDefinitionConverter : JsonConverter<Dictionary<strin
 				case JsonTokenType.String:
 				{
 					var pointName = reader.GetString()!;
-					var pointDefinition = resolver.ResolveReference(pointName);
+					var pointDefinition = new PointDefinitionDataProxy(pointName);
 
 					pointDefinitionDatas[key] = pointDefinition;
 					break;
@@ -50,7 +49,7 @@ public class DictionaryPointDefinitionConverter : JsonConverter<Dictionary<strin
 				{
 					var pointDatas = pointDataListConverter.Read(ref reader, typeToConvert, options);
 
-					pointDefinitionDatas[key] = new PointDefinitionData(pointDatas!);
+					pointDefinitionDatas[key] = new PointDefinitionDataProxy(new PointDefinitionData(pointDatas!));
 					break;
 				}
 				default:
@@ -61,7 +60,7 @@ public class DictionaryPointDefinitionConverter : JsonConverter<Dictionary<strin
 		return pointDefinitionDatas;
 	}
 
-	public override void Write(Utf8JsonWriter writer, Dictionary<string, PointDefinitionData> pointDefinitionDatas, JsonSerializerOptions options)
+	public override void Write(Utf8JsonWriter writer, Dictionary<string, PointDefinitionDataProxy> pointDefinitionDatas, JsonSerializerOptions options)
 	{
 		writer.WriteStartObject();
 		foreach (var (key, pointDefinitionData) in pointDefinitionDatas)

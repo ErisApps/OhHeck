@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
@@ -16,23 +17,33 @@ public class BeatmapCustomData : IAnalyzable
 	public List<EnvironmentEnhancement>? EnvironmentEnhancements { get; }
 
 	// Tracks
-	[JsonConverter(typeof(BeatmapCustomEventListConverter))]
-	[JsonPropertyName("_customEvents")]
-	public List<BeatmapCustomEvent>? CustomEvents { get; }
+	[JsonPropertyName("_pointDefinitions")]
+	[JsonPropertyOrder(0)]
+	public List<PointDefinitionData>? PointDefinitions { get; }
 
 	// Tracks
-	[JsonConverter(typeof(BeatmapPointDefinitionConverter))]
-	[JsonPropertyName("_pointDefinitions")]
-	public List<PointDefinitionData>? PointDefinitions { get; }
+	[JsonConverter(typeof(BeatmapCustomEventListConverter))]
+	[JsonPropertyName("_customEvents")]
+	[JsonPropertyOrder(1)]
+	public List<BeatmapCustomEvent>? CustomEvents { get; }
+
+
 
 	[JsonExtensionData]
 	public Dictionary<string, JsonElement> DontCareAboutThisData { get; set; } = new();
 
-	public BeatmapCustomData(List<EnvironmentEnhancement> environmentEnhancements, List<BeatmapCustomEvent> customEvents, List<PointDefinitionData> pointDefinitions)
+	public BeatmapCustomData(List<EnvironmentEnhancement> environmentEnhancements, List<PointDefinitionData> pointDefinitions, List<BeatmapCustomEvent> customEvents)
 	{
 		EnvironmentEnhancements = environmentEnhancements;
-		CustomEvents = customEvents;
 		PointDefinitions = pointDefinitions;
+		CustomEvents = customEvents;
+		foreach (var animateEvent in CustomEvents.OfType<AnimateEvent>())
+		{
+			foreach (var animateEventPointProperty in animateEvent.PointProperties)
+			{
+				animateEventPointProperty.Value.BeatmapCustomData = this;
+			}
+		}
 	}
 
 	public string GetFriendlyName() => nameof(BeatmapCustomData);
@@ -66,7 +77,7 @@ public abstract class ObjectCustomData : IAnalyzable
 	// Can also be a string which points to a Point Def defined in beatmap customData
 	[JsonPropertyName("_animation")]
 	[JsonConverter(typeof(DictionaryPointDefinitionConverter))]
-	public Dictionary<string, PointDefinitionData>? animation;
+	public Dictionary<string, PointDefinitionDataProxy>? animation;
 
 	[JsonPropertyName("_position")]
 	public List<float>? Position { get; }

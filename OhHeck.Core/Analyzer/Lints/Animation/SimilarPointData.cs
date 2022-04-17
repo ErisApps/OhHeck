@@ -45,8 +45,6 @@ public class SimilarPointData : IFieldAnalyzer {
 						continue;
 					}
 
-					var leftMiddleTimeDifference = MathF.Abs(point.Time - prevPoint.Time);
-
 					// example point data
 					// "_name":"colorWave","_points":[
 					// [1,1,1,1,0],

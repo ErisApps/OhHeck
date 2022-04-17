@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
@@ -82,6 +83,21 @@ public class BeatmapSaveData : IAnalyzable
 		BasicEventTypesWithKeywords = basicEventTypesWithKeywords;
 		UseNormalEventsAsCompatibleEvents = useNormalEventsAsCompatibleEvents;
 		BeatmapCustomData = beatmapCustomData;
+
+
+
+		foreach (var customData in notes.Select<ColorNoteData, ObjectCustomData?>(n => n.NoteCustomData).Concat(obstacles.Select(o => o.ObstacleCustomData)))
+		{
+			if (customData?.animation is null)
+			{
+				continue;
+			}
+
+			foreach (var (_, value) in customData.animation)
+			{
+				value.BeatmapCustomData = beatmapCustomData;
+			}
+		}
 	}
 
 	[JsonExtensionData] public Dictionary<string, JsonElement> DontCareAboutThisData { get; set; } = new();

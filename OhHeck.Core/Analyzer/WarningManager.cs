@@ -146,6 +146,8 @@ public class WarningManager
 			return analyzeDatas;
 		}
 
+		analyzable = analyzable.Redirect() ?? analyzable;
+
 		var friendlyName = analyzable.GetFriendlyName();
 		var typeOfAnalyzable = analyzable.GetType();
 
@@ -165,6 +167,8 @@ public class WarningManager
 		{
 			return;
 		}
+
+		analyzable = analyzable.Redirect() ?? analyzable;
 
 		var memberInfos = GetPublicMembersData(typeOfAnalyzable);
 

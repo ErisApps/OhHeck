@@ -62,7 +62,7 @@ public class BeatmapCustomEventListConverter: JsonConverter<List<BeatmapCustomEv
 				// skip keys that are not PointData types
 			.Where(s => s.Key is not ("_track" or "_duration" or "_easing"))
 			.ToDictionary(s => s.Key, s => s.Value);
-		animateEvent.PointProperties = PointHelper.PointDefinitionDatasFromDictionary(propDictionary, (PointDefinitionReferenceResolver) options.ReferenceHandler!.CreateResolver());
+		animateEvent.PointProperties = PointHelper.PointDefinitionDatasFromDictionary(propDictionary);
 
 		return basicBeatmapCustomEvent;
 	}

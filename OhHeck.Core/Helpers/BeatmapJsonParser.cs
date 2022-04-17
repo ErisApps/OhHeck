@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using OhHeck.Core.Helpers.Converters;
 using OhHeck.Core.Models.Beatmap;
 using OhHeck.Core.Models.beatmap.v3;
 
@@ -24,9 +23,6 @@ public static class BeatmapJsonParser
 			// mappers grr, to make configurable somehow
 			NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals
 		};
-
-		PointDefinitionReferenceHandler pointDefinitionReferenceHandler = new();
-		options.ReferenceHandler = pointDefinitionReferenceHandler;
 
 		stopwatch = Stopwatch.StartNew();
 

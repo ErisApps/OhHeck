@@ -9,4 +9,6 @@ public interface IAnalyzable
 	string GetFriendlyName();
 
 	string? ExtraData() => null;
+
+	IAnalyzable? Redirect() => null;
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using OhHeck.Core.Helpers.Converters;
 using OhHeck.Core.Models.ModData.Tracks;
 
 namespace OhHeck.Core.Helpers;
@@ -30,6 +29,7 @@ public static class PointHelper
 		{
 			List<PointData> list => list,
 			PointDefinitionData pointDefinitionData => pointDefinitionData.Points,
+			PointDefinitionDataProxy proxy => proxy.PointDefinitionData.Points,
 			_ => null
 		};
 
@@ -37,15 +37,17 @@ public static class PointHelper
 		v switch
 		{
 			List<PointData> list => new Dictionary<string, List<PointData>> { { string.Empty, list } },
+			PointDefinitionDataProxy proxy => new Dictionary<string, List<PointData>> { { string.Empty, proxy.PointDefinitionData.Points } },
 			PointDefinitionData pointDefinitionData => new Dictionary<string, List<PointData>> { { string.Empty, pointDefinitionData.Points } },
 			Dictionary<string, PointDefinitionData> dictionary => dictionary.ToDictionary(s => s.Key, (pair => pair.Value.Points)),
-			AnimateEvent beatmapCustomEvent => beatmapCustomEvent.PointProperties.ToDictionary(s => s.Key, (pair => pair.Value.Points)),
+			Dictionary<string, PointDefinitionDataProxy> dictionary => dictionary.ToDictionary(s => s.Key, (pair => pair.Value.PointDefinitionData.Points)),
+			AnimateEvent beatmapCustomEvent => beatmapCustomEvent.PointProperties.ToDictionary(s => s.Key, (pair => pair.Value.PointDefinitionData.Points)),
 			_ => null
 		};
 
-	public static Dictionary<string, PointDefinitionData> PointDefinitionDatasFromDictionary(Dictionary<string, object> dictionary, PointDefinitionReferenceResolver resolver)
+	public static Dictionary<string, PointDefinitionDataProxy> PointDefinitionDatasFromDictionary(Dictionary<string, object> dictionary)
 	{
-		Dictionary<string, PointDefinitionData> pointDefinitionDatas = new();
+		Dictionary<string, PointDefinitionDataProxy> pointDefinitionDatas = new();
 
 		foreach (var (name, temp) in dictionary)
 		{
@@ -60,7 +62,7 @@ public static class PointHelper
 			{
 				case string pointName:
 				{
-					var pointDefinition = resolver.ResolveReference(pointName);
+					var pointDefinition = new PointDefinitionDataProxy(pointName);
 
 					pointDefinitionDatas[name] = pointDefinition;
 					break;
@@ -90,7 +92,7 @@ public static class PointHelper
 					}
 
 					SortPoints(pointDatas);
-					pointDefinitionDatas[name] = new PointDefinitionData(name, pointDatas);
+					pointDefinitionDatas[name] = new PointDefinitionDataProxy(new PointDefinitionData(name, pointDatas));
 					break;
 				}
 			}

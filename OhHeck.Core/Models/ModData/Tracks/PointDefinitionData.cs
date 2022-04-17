@@ -1,9 +1,44 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Helpers.Converters;
+using OhHeck.Core.Models.Beatmap;
 
 namespace OhHeck.Core.Models.ModData.Tracks;
+
+
+[JsonConverter(typeof(PointDefinitionProxyConverter))]
+public class PointDefinitionDataProxy : IAnalyzable
+{
+	public BeatmapCustomData? BeatmapCustomData { get; internal set; }
+
+	public string? Name { get; }
+
+	private readonly Lazy<PointDefinitionData> _pointDefinitionDataLazy;
+
+	public PointDefinitionData PointDefinitionData => _pointDefinitionDataLazy.Value;
+
+	public PointDefinitionDataProxy(string name)
+	{
+		Name = name;
+		_pointDefinitionDataLazy = new Lazy<PointDefinitionData>(() =>
+		{
+			if (BeatmapCustomData is null)
+			{
+				throw new InvalidOperationException($"{nameof(BeatmapCustomData)} is null");
+			}
+
+			return BeatmapCustomData.PointDefinitions!.First(e => e.Name == Name);
+		});
+	}
+
+	public PointDefinitionDataProxy(PointDefinitionData pointData) => _pointDefinitionDataLazy = new Lazy<PointDefinitionData>(pointData);
+
+	public static implicit operator PointDefinitionData(PointDefinitionDataProxy self) => self.PointDefinitionData;
+	public string GetFriendlyName() => PointDefinitionData.GetFriendlyName();
+}
 
 public class PointDefinitionData : IAnalyzable
 {

@@ -24,7 +24,7 @@ public abstract class AnimateEvent : BeatmapCustomEvent
 	public float? Duration { get; }
 
 	[JsonIgnore]
-	public Dictionary<string, PointDefinitionData> PointProperties = new();
+	public Dictionary<string, PointDefinitionDataProxy> PointProperties = new();
 
 	public abstract override string GetFriendlyName();
 }
