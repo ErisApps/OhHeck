@@ -67,12 +67,12 @@ else if (opt.ListWarnings)
 		log.Information("\t{WarningName}", warningName);
 	}
 } else {
-	Testing.TestMap(log, opt.Map, warningManager, maxWarningCount);
+	Testing.TestMap(log, opt.Map, warningManager, maxWarningCount, opt.Analyze ?? false, opt.Optimize);
 }
 
 return (int) result.Tag;
 
 void TestMapDefault(string name)
 {
-	Testing.TestMap(log, $"./test_maps/{name}.dat", warningManager, maxWarningCount);
+	Testing.TestMap(log, $"./test_maps/{name}.dat", warningManager, maxWarningCount, opt.Analyze ?? false, opt.Optimize);
 }

@@ -9,7 +9,7 @@ namespace OhHeck.Core.Analyzer.Lints;
 [BeatmapWarning("ends-with-regex-lookup")]
 public class EndsWithRegexLookup : IFieldAnalyzer
 {
-	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput)
+	public void Validate(Type fieldType, in object? value, IWarningOutput outerWarningOutput)
 	{
 		if (value is not List<EnvironmentEnhancement> environmentEnhancements)
 		{

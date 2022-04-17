@@ -17,7 +17,7 @@ public static class PointLintHelper
 	/// <param name="warningOutput"></param>
 	/// <param name="analyzeFn"></param>
 	/// <typeparam name="T"></typeparam>
-	public static void AnalyzePoints<T>(T @this, object? value, IWarningOutput warningOutput, Action<IReadOnlyDictionary<string, List<PointData>>, T, IWarningOutput> analyzeFn)
+	public static void AnalyzePoints<T>(T @this, in object? value, IWarningOutput warningOutput, Action<IReadOnlyDictionary<string, List<PointData>>, T, IWarningOutput> analyzeFn)
 	{
 		if (value is List<BeatmapCustomEvent> customEvents)
 		{
@@ -45,5 +45,31 @@ public static class PointLintHelper
 		}
 
 		analyzeFn(pointDataDictionary, @this, warningOutput);
+	}
+
+	public static void AnalyzePoints<T>(T @this, ref object? value, Action<IReadOnlyDictionary<string, List<PointData>>, T> analyzeFn)
+	{
+		if (value is List<BeatmapCustomEvent> customEvents)
+		{
+			foreach (var beatmapCustomEvent in customEvents)
+			{
+				if (beatmapCustomEvent is not AnimateEvent animateEvent)
+				{
+					continue;
+				}
+
+				// pass in warningOutput to avoid allocation moment
+				analyzeFn(PointHelper.GetPointDataDictionary(animateEvent.PointProperties)!, @this);
+			}
+		}
+
+		var pointDataDictionary = PointHelper.GetPointDataDictionary(value);
+
+		if (pointDataDictionary is null)
+		{
+			return;
+		}
+
+		analyzeFn(pointDataDictionary, @this);
 	}
 }

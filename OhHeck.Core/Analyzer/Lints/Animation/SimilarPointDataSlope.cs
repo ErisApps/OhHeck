@@ -9,14 +9,14 @@ using OhHeck.Core.Models.ModData.Tracks;
 namespace OhHeck.Core.Analyzer.Lints.Animation;
 
 [BeatmapWarning("similar-point-data-slope")]
-public class SimilarPointDataSlope : IFieldAnalyzer
+public class SimilarPointDataSlope : IFieldAnalyzer, IFieldOptimizer
 {
 
 	// The minimum difference for considering not similar
 	// These numbers at quick glance seem to be fairly reliable, nice
 	// however they should be configurable or looked at later
 	[WarningConfigProperty("difference_threshold")]
-	private float _differenceThreshold = 0.003f;
+	private float _differenceThreshold = 0.03f;
 
 	[WarningConfigProperty("time_difference_threshold")]
 	private float _timeDifferenceThreshold = 0.025f;
@@ -29,91 +29,118 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 
 	// Compares points a, b and c where b is between a and c.
 	// If a-b's slope is similar to a-c, it deems it unnecessary
-	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput) =>
+	public void Validate(Type fieldType, in object? value, IWarningOutput outerWarningOutput) =>
 		PointLintHelper.AnalyzePoints(this, value, outerWarningOutput, static (pointDataDictionary, self, warningOutput) =>
 		{
-
-			foreach (var (s, pointDatas) in pointDataDictionary)
+			self.IteratePoints(pointDataDictionary, warningOutput, (s, slf, prevPoint, middlePoint, endPoint, middleSlope, warningOutput, _) =>
 			{
-				// we need at minimum 3 points to check
-				if (pointDatas.Count <= 2)
+				self.WriteWarning(warningOutput!, s, prevPoint!, middlePoint!, middleSlope, endPoint!);
+				return null;
+			});
+
+		});
+
+	private void IteratePoints(IReadOnlyDictionary<string, List<PointData>> pointDataDictionary, IWarningOutput? warningOutput,
+		Func<string, SimilarPointDataSlope, PointData?, PointData?, PointData?, float[], IWarningOutput?, int, int?> fn)
+	{
+		foreach (var (s, pointDatas) in pointDataDictionary)
+		{
+			// we need at minimum 3 points to check
+			if (pointDatas.Count <= 2)
+			{
+				continue;
+			}
+
+			// compare 3 points consecutively
+			var testPoint = pointDatas.First(); // if empty, we have a problem
+
+			// Reduce allocations by reusing the same array
+			var middleSlope = new float[testPoint.Data.Length];
+			var endSlope = new float[testPoint.Data.Length];
+			var middleYIntercepts = new float[testPoint.Data.Length];
+			var endYIntercepts = new float[testPoint.Data.Length];
+
+			for (var i = 1; i < pointDatas.Count - 1; i++)
+			{
+				var prevPoint = pointDatas[i - 1];
+				var endPoint = pointDatas[i + 1];
+				var middlePoint = pointDatas[i];
+
+				if (ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts, out var skip))
+				{
+					var result = fn(s, this, prevPoint, middlePoint, endPoint, middleSlope, warningOutput, i);
+
+					if (result is not null)
+					{
+						pointDatas.RemoveAt(result.Value);
+						i--;
+					}
+
+					continue;
+				}
+
+				if (skip)
 				{
 					continue;
 				}
 
-				// compare 3 points consecutively
-				var prevPoint = pointDatas.First(); // if empty, we have a problem
-
-				// Reduce allocations by reusing the same array
-				var middleSlope = new float[prevPoint.Data.Length];
-				var endSlope = new float[prevPoint.Data.Length];
-				var middleYIntercepts = new float[prevPoint.Data.Length];
-				var endYIntercepts = new float[prevPoint.Data.Length];
-
-				for (var i = 1; i < pointDatas.Count - 1; i++)
-				{
-					var endPoint = pointDatas[i + 1];
-					var middlePoint = pointDatas[i];
-
-					if (self.ComparePoints(prevPoint, middlePoint, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts, out var skip))
-					{
-						self.WriteWarning(warningOutput, s, prevPoint, middlePoint, middleSlope, endPoint);
-						continue;
-					}
-
-					if (skip)
-					{
-						continue;
-					}
-
-
-					var oldPrevPoint = prevPoint;
-					prevPoint = middlePoint;
 
 #pragma warning disable CS0162
-					if (!self._compareAllPreviousPoints)
-					{
-						continue;
-					}
-
-					// We don't need to recheck points when we're only checking the first 3
-					if (i < 4)
-					{
-						continue;
-					}
-
-					// Check every point before end
-					for (var j = 0; j < i - 2; j++)
-					{
-						// compare every point between start and end
-						for (var k = j + 1; k < i - 1; k++)
-						{
-							var startPoint = pointDatas[k];
-							var middlePoint2 = pointDatas[j];
-
-							// Skip these points, we just checked them
-							if (oldPrevPoint == startPoint && middlePoint2 == middlePoint || middlePoint2 == startPoint)
-							{
-								continue;
-							}
-
-							// TODO: Yeet
-							// skip points if non-linear time
-							// if (startPoint.Time >= middlePoint2.Time != middlePoint2.Time >= endPoint.Time)
-							// {
-							// 	continue;
-							// }
-
-							if (self.ComparePoints(startPoint, middlePoint2, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts, out _))
-							{
-								self.WriteWarning(warningOutput, s, startPoint, middlePoint2, middleSlope, endPoint);
-							}
-						}
-					}
-#pragma warning restore CS0162
+				if (!_compareAllPreviousPoints)
+				{
+					continue;
 				}
+
+				// We don't need to recheck points when we're only checking the first 3
+				if (i < 4)
+				{
+					continue;
+				}
+
+				// Check every point before end
+				for (var j = 0; j < i - 2; j++)
+				{
+					// compare every point between start and end
+					for (var k = j + 1; k < i - 1; k++)
+					{
+						var startPoint = pointDatas[k];
+						var middlePoint2 = pointDatas[j];
+
+						// Skip these points, we just checked them
+						if (prevPoint == startPoint && middlePoint2 == middlePoint || middlePoint2 == startPoint)
+						{
+							continue;
+						}
+
+						// TODO: Yeet
+						// skip points if non-linear time
+						// if (startPoint.Time >= middlePoint2.Time != middlePoint2.Time >= endPoint.Time)
+						// {
+						// 	continue;
+						// }
+
+						if (!ComparePoints(startPoint, middlePoint2, endPoint, middleSlope, endSlope, middleYIntercepts, endYIntercepts, out _))
+						{
+							continue;
+						}
+
+						var result = fn(s, this, startPoint, middlePoint2, endPoint, middleSlope, warningOutput, j);
+
+						if (result is null)
+						{
+							continue;
+						}
+
+						pointDatas.RemoveAt(result.Value);
+						i--;
+						k--;
+						// j--;
+					}
+				}
+#pragma warning restore CS0162
 			}
-		});
+		}
+	}
 
 	private void WriteWarning(IWarningOutput warningOutput, string s, PointData startPoint, PointData middlePoint, IEnumerable<float> middleSlope, PointData endPoint) =>
 		warningOutput.WriteWarning("Point data {S} slope and y intercept are closely intercepting and match easing/smooth {DifferenceThreshold} slope ({MiddleSlope}): " +
@@ -238,4 +265,6 @@ public class SimilarPointDataSlope : IFieldAnalyzer
 			}
 		}
 	}
+
+	public void Optimize(ref object? value) => PointLintHelper.AnalyzePoints(this, ref value, static (pointDataDictionary, self) => self.IteratePoints(pointDataDictionary, null, (_, _, _, _, _, _, _, i) => i));
 }

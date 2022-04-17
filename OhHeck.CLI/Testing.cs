@@ -6,11 +6,15 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using OhHeck.Core.Analyzer;
 using OhHeck.Core.Analyzer.Attributes;
 using OhHeck.Core.Analyzer.Implementation;
 using OhHeck.Core.Helpers;
 using OhHeck.Core.Helpers.Enumerable;
+using OhHeck.Core.Models.Beatmap;
+using OhHeck.Core.Models.ModData.Tracks;
 using Serilog.Core;
 using Serilog.Parsing;
 
@@ -29,9 +33,36 @@ public static class Testing
 			}
 			catch (Exception e)
 			{
+				if (Debugger.IsAttached)
+				{
+					throw;
+				}
+
 				// Throw with information
 				throw new AggregateException(
 					$"Caught an exception on field {analyzeProcessedData.WarningContext.DeclaringInstance.GetType()} {analyzeProcessedData.WarningContext.MemberName}:{analyzeProcessedData.WarningContext.MemberName}", e);
+			}
+		}
+	}
+
+	private static void Optimize(IEnumerable<AnalyzeProcessedData> analyzeProcessedDatas, WarningManager warningManager)
+	{
+		foreach (var analyzeProcessedData in analyzeProcessedDatas)
+		{
+			if (Debugger.IsAttached)
+			{
+				warningManager.Optimize(analyzeProcessedData);
+			} else {
+				try
+				{
+					warningManager.Optimize(analyzeProcessedData);
+				}
+				catch (Exception e)
+				{
+					// Throw with information
+					throw new AggregateException(
+						$"Caught an exception on field {analyzeProcessedData.WarningContext.DeclaringInstance.GetType()} {analyzeProcessedData.WarningContext.MemberName}:{analyzeProcessedData.WarningContext.MemberName}", e);
+				}
 			}
 		}
 	}
@@ -73,12 +104,13 @@ public static class Testing
 		return messageFormatted;
 	}
 
-	public static void TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount)
+	public static void TestMap(Logger log, string name, WarningManager warningManager, int maxWarningCount, bool analyze, bool optimize)
 	{
 		log.Information("Testing map {Name}", name);
 		Stream fileStream = File.OpenRead(name);
-
-		var beatmapSaveData = BeatmapJsonParser.ParseBeatmap(ref fileStream, null, out var stopwatch);
+		var options = BeatmapJsonParser.BeatmapJsonOptions();
+		var beatmapSaveData = BeatmapJsonParser.ParseBeatmapv2(ref fileStream, options, out var stopwatch);
+		fileStream.Dispose();
 
 		log.Information("Parsed beatmap in {Count}ms", stopwatch.ElapsedMilliseconds);
 
@@ -89,7 +121,7 @@ public static class Testing
 		}
 
 		log.Information("Version {Version}", beatmapSaveData.Version);
-		log.Information("Events {Count}", beatmapSaveData.BasicBeatmapEvents.Count);
+		log.Information("Events {Count}", beatmapSaveData.Events.Count);
 		log.Information("Notes {Count}", beatmapSaveData.Notes.Count);
 		log.Information("Obstacles {Count}", beatmapSaveData.Obstacles.Count);
 
@@ -113,10 +145,29 @@ public static class Testing
 		log.Information("Took {Time}ms to analyze beatmap", stopwatch.ElapsedMilliseconds);
 		stopwatch.Restart();
 
-		Validate(analyzeProcessedDatas, warningManager, warningOutput);
-		stopwatch.Stop();
-		log.Information("Took {Time}ms to validate beatmap", stopwatch.ElapsedMilliseconds);
+		if (analyze)
+		{
+			Validate(analyzeProcessedDatas, warningManager, warningOutput);
+			log.Information("Took {Time}ms to validate beatmap", stopwatch.ElapsedMilliseconds);
+		}
 
+
+		if (optimize)
+		{
+			for (var i = 0; i < 5; i++)
+			{
+				Optimize(analyzeProcessedDatas, warningManager);
+			}
+
+			log.Information("Took {Time}ms to optimize beatmap", stopwatch.ElapsedMilliseconds);
+			using var writeStream = File.OpenWrite($"{name}_Optimized");
+			writeStream.SetLength(0);
+
+			JsonSerializer.Serialize(writeStream, beatmapSaveData, options);
+			log.Information("Written optimized map to {File}", writeStream.Name);
+		}
+
+		stopwatch.Stop();
 
 		var warningCount = 0;
 		var analyzerNameDictionary = new Dictionary<Type, string>();

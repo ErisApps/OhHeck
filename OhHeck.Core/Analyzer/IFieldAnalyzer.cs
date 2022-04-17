@@ -11,5 +11,5 @@ public interface IFieldAnalyzer
 	/// <param name="value"></param>
 	/// <param name="outerWarningOutput"></param>
 	/// <returns>The warning message or null if valid</returns>
-	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput);
+	public void Validate(Type fieldType, in object? value, IWarningOutput outerWarningOutput);
 }

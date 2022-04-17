@@ -14,7 +14,9 @@ namespace OhHeck.Core.Analyzer;
 public class WarningManager
 {
 	private readonly Dictionary<string, IFieldAnalyzer> _beatmapAnalyzers = new();
+	private readonly Dictionary<string, IFieldOptimizer> _beatmapOptimizers = new();
 	private static readonly Type BeatmapAnalyzerType = typeof(IFieldAnalyzer);
+	private static readonly Type BeatmapOptimizerType = typeof(IFieldOptimizer);
 	private static readonly Type AnalyzableType = typeof(IAnalyzable);
 
 	[ThreadStatic]
@@ -57,21 +59,33 @@ public class WarningManager
 				throw new InvalidOperationException($"Beatmap analyzer {warningAttribute} already exists tied to {existingWarning.GetType()}");
 			}
 
-			if (!BeatmapAnalyzerType.IsAssignableFrom(type))
+			if (!BeatmapAnalyzerType.IsAssignableFrom(type) && !BeatmapOptimizerType.IsAssignableFrom(type))
 			{
-				throw new InvalidOperationException($"{type} must inherit {nameof(IFieldAnalyzer)}");
+				throw new InvalidOperationException($"{type} must inherit {nameof(IFieldAnalyzer)} or {nameof(IFieldOptimizer)}");
 			}
 
 			_logger.Debug("Class {Type} has warning attribute", type);
 
-			_container.Register(typeof(IFieldAnalyzer), type, serviceKey: warningAttribute.Name, reuse: Reuse.Singleton);
+			List<Type> serviceTypes = new();
+			if (BeatmapAnalyzerType.IsAssignableFrom(type))
+			{
+				serviceTypes.Add(BeatmapAnalyzerType);
+			}
+			if (BeatmapOptimizerType.IsAssignableFrom(type))
+			{
+				serviceTypes.Add(BeatmapOptimizerType);
+			}
+
+			_container.RegisterMany(serviceTypes.ToArray(), type, serviceKey: warningAttribute.Name, reuse: Reuse.Singleton);
+
 			registeredCache[type] = warningAttribute;
 		}
 
 		// Now resolve finally dependencies
 		var registeredFieldAnalyzers = _container.ResolveMany<IFieldAnalyzer>();
+		var registeredOptimizers = _container.ResolveMany<IFieldOptimizer>();
 
-		if (registeredFieldAnalyzers is null)
+		if (registeredFieldAnalyzers is null && registeredOptimizers is null)
 		{
 			return;
 		}
@@ -87,20 +101,32 @@ public class WarningManager
 			list.Add(configureWarningValue);
 		}
 
-		foreach (var registeredFieldAnalyzer in registeredFieldAnalyzers)
+		void DoInject<T>(IEnumerable<T>? list, IDictionary<string, T> dictionary)
 		{
-			var type = registeredFieldAnalyzer.GetType();
-			var warningAttribute = registeredCache[type];
-			if (warningValuesDictionary.TryGetValue(warningAttribute.Name, out var scopedWarningValues))
+			if (list is null)
 			{
-				InjectWarningConfigValues(registeredFieldAnalyzer, type, scopedWarningValues);
+				return;
 			}
 
-			_beatmapAnalyzers[warningAttribute.Name] = registeredFieldAnalyzer;
+			foreach (var registeredFieldAnalyzer in list)
+			{
+				var type = registeredFieldAnalyzer!.GetType();
+				var warningAttribute = registeredCache[type];
+				if (warningValuesDictionary.TryGetValue(warningAttribute.Name, out var scopedWarningValues))
+				{
+					InjectWarningConfigValues(registeredFieldAnalyzer, type, scopedWarningValues);
+				}
+
+				dictionary[warningAttribute.Name] = registeredFieldAnalyzer;
+			}
 		}
+
+
+		DoInject(registeredFieldAnalyzers, _beatmapAnalyzers);
+		DoInject(registeredOptimizers, _beatmapOptimizers);
 	}
 
-	private static void InjectWarningConfigValues(IFieldAnalyzer fieldAnalyzer, IReflect type, IEnumerable<ConfigureWarningValue> configureWarningValues)
+	private static void InjectWarningConfigValues(object fieldAnalyzer, IReflect type, IEnumerable<ConfigureWarningValue> configureWarningValues)
 	{
 		// I hate this
 		// TODO: Support properties
@@ -133,6 +159,15 @@ public class WarningManager
 		}
 
 		warningOutput.PopWarningInfo();
+	}
+
+	public void Optimize(AnalyzeProcessedData analyzeProcessedData)
+	{
+		var (_, memberValue, _) = analyzeProcessedData;
+		foreach (var (_, optimizer) in _beatmapOptimizers)
+		{
+			optimizer.Optimize(ref memberValue);
+		}
 	}
 
 	// Nullable

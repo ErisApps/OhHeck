@@ -14,7 +14,7 @@ public class TooManyParentingTracks : IFieldAnalyzer
 	[WarningConfigProperty("track_parenting_maximum")]
 	private int _trackParentingMaximum = 20;
 
-	public void Validate(Type fieldType, object? value, IWarningOutput outerWarningOutput)
+	public void Validate(Type fieldType, in object? value, IWarningOutput outerWarningOutput)
 	{
 		if (value is not List<BeatmapCustomEvent> events)
 		{
