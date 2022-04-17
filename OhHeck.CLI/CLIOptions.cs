@@ -34,7 +34,7 @@ public class CLIOptions
 	[Option("suppressed-warnings", Separator = ';')]
 	public IEnumerable<string> SuppressedWarnings { get; }
 
-	[Option("configure")]
+	[Option("configure", Separator = ';')]
 	public IEnumerable<string> ConfigureWarningValues { get; }
 
 	[Option("optimize", Default = false)]
