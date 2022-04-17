@@ -16,4 +16,13 @@ public static class WarningManagerExtensions
 
 		return analyzeDatas;
 	}
+
+	public static ICollection<AnalyzeProcessedData> AnalyzeBeatmap(this WarningManager warningManager, Models.Beatmap.v2.BeatmapSaveData beatmapSaveData, ICollection<AnalyzeProcessedData>? analyzeDatas = null)
+	{
+		analyzeDatas ??= new List<AnalyzeProcessedData>();
+
+		warningManager.Analyze(beatmapSaveData, analyzeDatas);
+
+		return analyzeDatas;
+	}
 }
