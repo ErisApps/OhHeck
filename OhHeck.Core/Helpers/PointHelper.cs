@@ -92,7 +92,7 @@ public static class PointHelper
 					}
 
 					SortPoints(pointDatas);
-					pointDefinitionDatas[name] = new PointDefinitionDataProxy(new PointDefinitionData(name, pointDatas));
+					pointDefinitionDatas[name] = new PointDefinitionDataProxy(new PointDefinitionData(null, pointDatas));
 					break;
 				}
 			}
