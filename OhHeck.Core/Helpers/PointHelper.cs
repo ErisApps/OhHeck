@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using OhHeck.Core.Helpers.Converters;
 using OhHeck.Core.Models.ModData.Tracks;
 
@@ -37,7 +39,7 @@ public static class PointHelper
 			List<PointData> list => new Dictionary<string, List<PointData>> { { string.Empty, list } },
 			PointDefinitionData pointDefinitionData => new Dictionary<string, List<PointData>> { { string.Empty, pointDefinitionData.Points } },
 			Dictionary<string, PointDefinitionData> dictionary => dictionary.ToDictionary(s => s.Key, (pair => pair.Value.Points)),
-			AnimateTrackEvent beatmapCustomEvent => beatmapCustomEvent.PointProperties.ToDictionary(s => s.Key, (pair => pair.Value.Points)),
+			AnimateEvent beatmapCustomEvent => beatmapCustomEvent.PointProperties.ToDictionary(s => s.Key, (pair => pair.Value.Points)),
 			_ => null
 		};
 
@@ -45,8 +47,15 @@ public static class PointHelper
 	{
 		Dictionary<string, PointDefinitionData> pointDefinitionDatas = new();
 
-		foreach (var (name, o) in dictionary)
+		foreach (var (name, temp) in dictionary)
 		{
+			var o = temp;
+
+			if (temp is JsonElement jsonElement)
+			{
+				o = jsonElement.ToNativeType();
+			}
+
 			switch (o)
 			{
 				case string pointName:
@@ -56,9 +65,30 @@ public static class PointHelper
 					pointDefinitionDatas[name] = pointDefinition;
 					break;
 				}
-				case IEnumerable<object> objects:
+				case IEnumerable keyframes:
 				{
-					var pointDatas = objects.Select(p => new PointData((List<object>) p)).ToList();
+					// TODO: Consolidate into a common method
+					var pointDatas = new List<PointData>();
+					var tempObjs = new List<object>(); // I hate this
+					foreach (var keyframe in keyframes)
+					{
+						// is [[...],[...]]
+						if (keyframe is IEnumerable keyframeData)
+						{
+							pointDatas.Add(new PointData(keyframeData));
+						}
+						// is [...]
+						else
+						{
+							tempObjs.Add(keyframe);
+						}
+					}
+
+					if (tempObjs.Count > 0)
+					{
+						pointDatas.Add(new PointData(tempObjs.OfType<float>().ToArray(), 0, null, false));
+					}
+
 					SortPoints(pointDatas);
 					pointDefinitionDatas[name] = new PointDefinitionData(name, pointDatas);
 					break;

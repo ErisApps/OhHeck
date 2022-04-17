@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using OhHeck.Core.Analyzer;
@@ -25,7 +26,7 @@ public class PointData : IAnalyzable
 		Smooth = smooth;
 	}
 
-	public PointData(IEnumerable<object> data)
+	public PointData(IEnumerable data)
 	{
 		List<float> preData = new();
 
