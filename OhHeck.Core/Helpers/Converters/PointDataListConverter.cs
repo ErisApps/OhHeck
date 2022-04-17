@@ -69,7 +69,7 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 		return new PointData(time: time, data: animationData, smooth: smooth, easing: easing);
 	}
 
-	private static void WritePointData(ref Utf8JsonWriter writer, PointData point)
+	private static void WritePointData(ref Utf8JsonWriter writer, PointData point, bool single)
 	{
 		// single point def
 		writer.WriteStartArray();
@@ -78,17 +78,21 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 			writer.WriteNumberValue(x);
 		}
 
-		writer.WriteNumberValue(point.Time);
-
-		if (point.Easing is not null)
+		if (!single)
 		{
-			writer.WriteStringValue(point.Easing.ToString());
+			writer.WriteNumberValue(point.Time);
+
+			if (point.Easing is not null)
+			{
+				writer.WriteStringValue(point.Easing.ToString());
+			}
+
+			if (point.Smooth)
+			{
+				writer.WriteStringValue(PointData.SMOOTHIDENTIFIER);
+			}
 		}
 
-		if (point.Smooth)
-		{
-			writer.WriteStringValue(PointData.SMOOTHIDENTIFIER);
-		}
 		writer.WriteEndArray();
 	}
 
@@ -140,14 +144,14 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 		if (value.Count == 1)
 		{
 			var point = value.First();
-			WritePointData(ref writer, point);
+			WritePointData(ref writer, point, true);
 		}
 		else
 		{
 			writer.WriteStartArray();
 			foreach (var point in value)
 			{
-				WritePointData(ref writer, point);
+				WritePointData(ref writer, point, false);
 			}
 			writer.WriteEndArray();
 		}
