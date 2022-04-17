@@ -60,6 +60,9 @@ public class BeatmapCustomEvent : IAnalyzable
 	[JsonPropertyName("_data")]
 	public Dictionary<string, object> Data { get; }
 
+	[JsonExtensionData]
+	public Dictionary<string, JsonElement> DontCareAboutThisData { get; set; } = new();
+
 	public BeatmapCustomEvent(float time, string type, Dictionary<string, object> data)
 	{
 		Time = time;
@@ -104,7 +107,7 @@ public abstract class ObjectCustomData : IAnalyzable
 
 
 	[JsonExtensionData]
-	public Dictionary<string, JsonElement> DontCareAboutThisData { get; } = new();
+	public Dictionary<string, JsonElement> DontCareAboutThisData { get; set; } = new();
 
 	public abstract string GetFriendlyName();
 }
@@ -122,7 +125,7 @@ public class NoteCustomData : ObjectCustomData
 public class EventCustomData : IAnalyzable
 {
 	[JsonExtensionData]
-	public Dictionary<string, JsonElement> DontCareAboutThisData { get; } = new();
+	public Dictionary<string, JsonElement> DontCareAboutThisData { get; set; } = new();
 
 	public string GetFriendlyName() => nameof(EventCustomData);
 }
