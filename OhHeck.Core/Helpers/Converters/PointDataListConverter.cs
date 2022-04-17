@@ -78,6 +78,8 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 			writer.WriteNumberValue(x);
 		}
 
+		writer.WriteNumberValue(point.Time);
+
 		if (point.Easing is not null)
 		{
 			writer.WriteStringValue(point.Easing.ToString());
