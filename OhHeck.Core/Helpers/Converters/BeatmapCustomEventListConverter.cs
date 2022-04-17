@@ -27,18 +27,18 @@ public class BeatmapCustomEventListConverter: JsonConverter<List<BeatmapCustomEv
 			}
 
 
-			list.Add(ReadEvent(ref reader, options));
+			list.Add(ReadEvent<BeatmapCustomEvent>(ref reader, options));
 		}
 
 
 		return list;
 	}
 
-	private static BeatmapCustomEvent ReadEvent(ref Utf8JsonReader reader, JsonSerializerOptions options)
+	internal static BeatmapCustomEvent ReadEvent<T>(ref Utf8JsonReader reader, JsonSerializerOptions options) where T: BeatmapCustomEvent
 	{
 		var restore = reader;
 		// var tempReader = new Utf8JsonReader(reader., reader.IsFinalBlock, reader.CurrentState, options);
-		var basicBeatmapCustomEvent = JsonSerializer.Deserialize<BeatmapCustomEvent>(ref reader, options)!;
+		BeatmapCustomEvent basicBeatmapCustomEvent = JsonSerializer.Deserialize<T>(ref reader, options)!;
 
 
 		switch (basicBeatmapCustomEvent.Type)
@@ -69,5 +69,23 @@ public class BeatmapCustomEventListConverter: JsonConverter<List<BeatmapCustomEv
 
 
 
-	public override void Write(Utf8JsonWriter writer, List<BeatmapCustomEvent> value, JsonSerializerOptions options) => JsonSerializer.Serialize(writer, value, options);
+	public override void Write(Utf8JsonWriter writer, List<BeatmapCustomEvent> value, JsonSerializerOptions options)
+	{
+		writer.WriteStartArray();
+		foreach (var beatmapCustomEvent in value)
+		{
+			switch (beatmapCustomEvent)
+			{
+				case null:
+					continue;
+				case AnimateEvent animateEvent:
+					JsonSerializer.Serialize(writer, animateEvent, options);
+					break;
+				default:
+					JsonSerializer.Serialize(writer, beatmapCustomEvent, options);
+					break;
+			}
+		}
+		writer.WriteEndArray();
+	}
 }

@@ -30,7 +30,7 @@ public class PointDefinitionDataProxy : IAnalyzable
 				throw new InvalidOperationException($"{nameof(BeatmapCustomData)} is null");
 			}
 
-			return BeatmapCustomData.PointDefinitions!.First(e => e.Name == Name);
+			return BeatmapCustomData.PointDefinitions!.FirstOrDefault(e => e.Name == Name) ?? throw new InvalidOperationException($"Unable to find point {name}");
 		});
 	}
 
@@ -40,10 +40,11 @@ public class PointDefinitionDataProxy : IAnalyzable
 	public string GetFriendlyName() => PointDefinitionData.GetFriendlyName();
 }
 
+[JsonConverter(typeof(PointDefinitionConverter))]
 public class PointDefinitionData : IAnalyzable
 {
 	[JsonConstructor]
-	public PointDefinitionData(string name, List<PointData> points)
+	public PointDefinitionData(string? name, List<PointData> points)
 	{
 		Name = name;
 		Points = points;

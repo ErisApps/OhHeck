@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using OhHeck.Core.Helpers.Converters;
 using OhHeck.Core.Models.Beatmap;
 
 namespace OhHeck.Core.Models.ModData.Tracks;
 
+[JsonConverter(typeof(AnimateEventConverter))]
 public abstract class AnimateEvent : BeatmapCustomEvent
 {
 	protected AnimateEvent(float time, string type, Dictionary<string, object> data, string track, Functions? easing, float? duration) : base(time, type, data)
@@ -12,7 +14,6 @@ public abstract class AnimateEvent : BeatmapCustomEvent
 		Easing = easing;
 		Duration = duration;
 	}
-
 
 	[JsonPropertyName("_track")]
 	public string Track { get; }

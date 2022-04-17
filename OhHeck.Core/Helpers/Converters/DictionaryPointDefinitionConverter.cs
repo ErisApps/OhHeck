@@ -65,15 +65,8 @@ public class DictionaryPointDefinitionConverter : JsonConverter<Dictionary<strin
 		writer.WriteStartObject();
 		foreach (var (key, pointDefinitionData) in pointDefinitionDatas)
 		{
-			if (pointDefinitionData.Name is not null)
-			{
-				writer.WriteString(key, pointDefinitionData.Name);
-			}
-			else
-			{
-				writer.WritePropertyName(key);
-				JsonSerializer.Serialize(writer, pointDefinitionData, options);
-			}
+			writer.WritePropertyName(key);
+			JsonSerializer.Serialize(writer, pointDefinitionData, options);
 		}
 		writer.WriteEndObject();
 	}
