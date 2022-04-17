@@ -68,6 +68,7 @@ public class BeatmapCustomEvent : IAnalyzable
 	}
 
 	public virtual string GetFriendlyName() => nameof(BeatmapCustomEvent);
+	public string ExtraData() => $"Type {Type} Time {Time}";
 }
 
 
