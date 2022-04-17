@@ -117,7 +117,7 @@ public class NoteData : BeatmapSaveDataItem, IAnalyzable
 	[JsonPropertyName("_type")]
 	public NoteType Type { get; }
 
-	[JsonPropertyName("cutDirection")]
+	[JsonPropertyName("_cutDirection")]
 	public NoteCutDirection CutDirection { get; }
 
 	[JsonPropertyName("_customData")]
