@@ -52,6 +52,6 @@ public class BadFakeWall : IFieldAnalyzer,IFieldOptimizer {
 		}
 
 		obstacleCustomData.Fake = FakeTruthy.TRUE;
-		obstacleCustomData.Cuttable = FakeTruthy.TRUE;
+		obstacleCustomData.Cuttable = FakeTruthy.FALSE;
 	}
 }
