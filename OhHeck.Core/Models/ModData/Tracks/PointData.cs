@@ -9,12 +9,12 @@ public class PointData
 {
 	public float[] Data { get; }
 
-	public float Time { get; }
+	public float Time { get; set; }
 
 	// if null, it SHOULD mean the first point
-	public Functions? Easing { get; }
+	public Functions? Easing { get; set; }
 
-	public bool Smooth { get; } = false;
+	public bool Smooth { get; set; } = false;
 	internal const string SMOOTHIDENTIFIER = "splineCatmullRom";
 
 	public PointData(float[] data, float time, Functions? easing, bool smooth)
