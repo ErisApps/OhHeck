@@ -16,7 +16,7 @@ public class SimilarPointData : IFieldAnalyzer, IFieldOptimizer
 	private float _differenceThreshold = 1f; // 3f;
 
 	[WarningConfigProperty("time_difference_threshold")]
-	private float _timeDifferenceThreshold = 0.03f; // 0.1f;
+	private float _timeDifferenceThreshold = 0.001f; // 0.1f;
 
 	// I've got no idea if this is a reliable algorithm
 	// Compares two points and attempts to make a rough estimate of whether they're similar/redundant
