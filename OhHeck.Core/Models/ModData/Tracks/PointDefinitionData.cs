@@ -40,7 +40,6 @@ public class PointDefinitionDataProxy : IAnalyzable
 	public string GetFriendlyName() => PointDefinitionData.GetFriendlyName();
 }
 
-[JsonConverter(typeof(PointDefinitionConverter))]
 public class PointDefinitionData : IAnalyzable
 {
 	[JsonConstructor]

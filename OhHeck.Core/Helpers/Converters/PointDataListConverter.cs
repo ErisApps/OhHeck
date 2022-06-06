@@ -18,15 +18,8 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 
 		List<float> preData = new();
 
-		while (reader.Read())
+		void HandleToken(ref Utf8JsonReader reader)
 		{
-			// If this is not a [...] point def
-			// in other words, if it's a [[...], [...]]
-			if (!single && reader.TokenType == JsonTokenType.EndArray)
-			{
-				break;
-			}
-
 			switch (reader.TokenType)
 			{
 				// Point data is [...]
@@ -34,22 +27,45 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 					preData.Add((float) reader.GetDouble());
 					break;
 				case JsonTokenType.String:
-					var str = reader.GetString()!;
-					if (str == PointData.SMOOTHIDENTIFIER)
+					try
 					{
-						smooth = true;
+						var str = reader.GetString()!;
+						if (str == PointData.SMOOTHIDENTIFIER)
+						{
+							smooth = true;
+						}
+						else
+						{
+							easing = Enum.Parse(typeof(Functions), str) as Functions?;
+						}
 					}
-					else
+					catch (Exception e)
 					{
-						easing = Enum.Parse(typeof(Functions), str) as Functions?;
+						throw new JsonException(null, e);
 					}
 
 					break;
-
 				default:
 					throw new JsonException();
 			}
 		}
+
+		// handle the first token
+		if (single)
+		{
+			HandleToken(ref reader);
+		}
+
+		while (reader.Read())
+		{
+			if (reader.TokenType == JsonTokenType.EndArray)
+			{
+				break;
+			}
+
+			HandleToken(ref reader);
+		}
+
 
 		float time;
 		float[] animationData;
@@ -128,13 +144,14 @@ public class PointDataListConverter : JsonConverter<List<PointData>>
 				case JsonTokenType.Number:
 				case JsonTokenType.String:
 					pointDatas.Add(ParsePointData(ref reader, true));
-					break;
+					goto finish;
 
 				default:
 					throw new JsonException($"Not a array or number. Received {reader.TokenType}");
 			}
 		}
 
+		finish:
 		PointHelper.SortPoints(pointDatas);
 		return pointDatas;
 	}
